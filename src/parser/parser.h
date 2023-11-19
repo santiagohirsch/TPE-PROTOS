@@ -13,6 +13,9 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#define COMMAND_MAX_LEN 5
+#define ARG_MAX_LEN 40
+
 /**
  * Evento que retorna el parser.
  * Cada tipo de evento tendrá sus reglas en relación a data.
@@ -20,13 +23,12 @@
 struct parser_event {
     /** tipo de evento */
     unsigned type;
-    /** caracteres asociados al evento */
-    uint8_t  data[3];
-    /** cantidad de datos en el buffer `data' */
-    uint8_t  n;
 
-    /** lista de eventos: si es diferente de null ocurrieron varios eventos */
-    struct parser_event *next;
+    char command[COMMAND_MAX_LEN];
+    char arg1[ARG_MAX_LEN];
+    char arg2[ARG_MAX_LEN];
+
+    unsigned int idx;
 };
 
 /** describe una transición entre estados  */
@@ -36,9 +38,8 @@ struct parser_state_transition {
     /** descriptor del estado destino cuando se cumple la condición */
     unsigned  dest;
     /** acción 1 que se ejecuta cuando la condición es verdadera. requerida. */
-    void    (*act1)(struct parser_event *ret, const uint8_t c);
-    /** otra acción opcional */
-    void    (*act2)(struct parser_event *ret, const uint8_t c);
+    void    (*action)(struct parser_event *ret, const uint8_t c);
+
 };
 
 /** predicado para utilizar en `when' que retorna siempre true */
@@ -88,6 +89,5 @@ parser_feed     (struct parser *p, const uint8_t c);
  */
 const unsigned *
 parser_no_classes(void);
-
 
 #endif
