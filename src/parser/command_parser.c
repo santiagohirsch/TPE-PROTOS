@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdio.h>
 
 #include "command_parser.h"
 
@@ -64,4 +65,15 @@ static const struct parser_definition command_parser_definition = {
 
 struct parser * command_parser_init() {
     return parser_init(parser_no_classes(), &command_parser_definition);
+}
+
+struct parser_event * get_command(struct parser_event * event, struct parser * p) {
+    int c;
+
+    while(event->type == MAYEQ) {
+        c = getchar();
+        event = parser_feed(p, c);
+    }
+    
+    return event;
 }

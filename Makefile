@@ -1,7 +1,7 @@
 include Makefile.inc
 
 # Source files
-SRC := $(wildcard $(SRC_DIR)/*.c)
+SRC := $(shell find . -name "*.c")
 
 # Object files
 
