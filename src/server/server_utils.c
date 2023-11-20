@@ -4,9 +4,8 @@
 #include <string.h>
 #include "server_utils.h"
 #include <unistd.h>
-
-#define BUFF_SIZE 1024
-
+#include "../state_machine/stm.h"
+#include "../parser/command_parser.h"
 
 
 //TODO: Agregar codigos de error al .h
@@ -95,19 +94,57 @@ int accept_connection(int server_sock){
 }
 
 int handle_connection(int client) {
-    char buffer[BUFF_SIZE] = {0};
-    int bytes_read = 0;
 
-    while((bytes_read = w_recv(client, buffer, BUFF_SIZE, 0)) > 0){
-        
-        int bytes_sent = w_send(client, buffer, bytes_read, 0);
+    // Initialize resources
+    struct parser *command_parser = command_parser_init();
 
-        if(bytes_sent != bytes_read){
-            perror("send error");
-            return -1;
+    struct parser_event *event = NULL;
+
+    state_machine_ptr state_machine = state_machine_init();
+
+    struct buffer_t read_buffer = {{0}, 0, 0};
+
+    char write_buffer[BUFF_SIZE];
+
+    state_machine_run(state_machine, event, write_buffer, 0);
+
+    int read_pos_aux;
+
+    while(get_state(state_machine) == AUTHENTICATION) {
+        event = malloc(sizeof(struct parser_event));
+        read_pos_aux = 0; 
+
+        // If there is a possible command in the buffer, parse it
+        while(event->type == MAYEQ) {
+
+            // If the buffer is empty, read from the socket
+            if (read_buffer.read_pos == read_buffer.write_pos) {
+                event->bytes_received = w_recv(client, read_buffer.buffer + read_buffer.write_pos, BUFF_SIZE - read_buffer.write_pos, 0);
+                read_buffer.write_pos += event->bytes_received;
+            }
+
+            // Parse the command (save a copy of the read position because it will be modified)
+            read_pos_aux = read_buffer.read_pos;
+            event = get_command(event, command_parser, &read_buffer, read_buffer.write_pos - read_buffer.read_pos);
+        }
+
+        // If the command is complete, run the state machine
+        parser_reset(command_parser);
+
+        int len = state_machine_run(state_machine, event, write_buffer, read_buffer.write_pos - read_pos_aux);
+
+        int bytes_sent = 0;
+
+        // Send the response
+        while(bytes_sent < len) {
+            bytes_sent += w_send(client, write_buffer + bytes_sent, len - bytes_sent, 0);
         }
     }
 
+    // Clean resources and close connection
+    free(event);
+    free_state_machine(state_machine);
+    parser_destroy(command_parser);
     close(client);
     return 0;
 }

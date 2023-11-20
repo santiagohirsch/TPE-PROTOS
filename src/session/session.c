@@ -32,7 +32,8 @@ void start_session(user_session * session) {
     printf("Connection %d - STARTED\n", session->c);
 
     while(1) {
-        state_machine_run(session->stm, p);
+        // TODO: Cambiar toda esta funcion
+        //state_machine_run(session->stm, p);
 
         if (session->stm == EXIT) {
             break;

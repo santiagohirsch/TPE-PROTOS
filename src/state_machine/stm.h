@@ -11,6 +11,8 @@ state_machine_ptr state_machine_init();
 
 void free_state_machine(state_machine_ptr stm);
 
-void state_machine_run(state_machine_ptr stm, struct parser *p);
+int state_machine_run(state_machine_ptr stm, struct parser_event *event, char *buffer, int bytes);
+
+state get_state(state_machine_ptr stm);
 
 #endif

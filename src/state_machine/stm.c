@@ -7,49 +7,54 @@ typedef struct state_machine {
     state state;
 } state_machine;
 
-typedef void (*state_handler)(state_machine_ptr stm, struct parser *p);
+typedef int (*state_handler)(state_machine_ptr stm, struct parser_event *event, char *buffer, int bytes);
 
-void start(state_machine_ptr stm, struct parser *p) {
+//TODO: Agregar mensajes a un .h (+OK POP3 server READY, -ERR Unknown command, etc)
+
+int start(state_machine_ptr stm, struct parser_event *event, char *buffer, int bytes) {
     printf("+OK POP3 server READY\n");
     stm->state = AUTHENTICATION;
+    return 0;
 }
 
-state_handler auth(state_machine_ptr stm, struct parser *p) {
-    struct parser_event *event = malloc(sizeof(struct parser_event));
-    event = get_command(event, p);
-    if (strcmp(event->command, "USER") == 0) {
-        printf("+OK\n");
+int auth(state_machine_ptr stm, struct parser_event *event, char *buffer, int bytes) {
+    int len;
+    if (strncmp(event->command, "USER", bytes) == 0) {
+        len = strlen("+OK\n");
+        strncpy(buffer, "+OK\n", len);
         stm->state = AUTHENTICATION;
     }
-    else if (strcmp(event->command, "PASS") == 0) {
-        printf("+OK\n");
+    else if (strncmp(event->command, "PASS", bytes) == 0) {
+        len = strlen("+OK\n");
+        strncpy(buffer, "+OK\n", len);
         stm->state = TRANSACTION;
     }
     else {
-        printf("-ERR Unknown command\n");
+        len = strlen("-ERR Unknown command\n");
+        strncpy(buffer, "-ERR Unknown command\n", len);
         stm->state = AUTHENTICATION;
     }
-    parser_reset(p);
+    return len;
 }
 
-state_handler transaction(state_machine_ptr stm, struct parser *p) {
-    struct parser_event *event = malloc(sizeof(struct parser_event));
-    event = get_command(event, p);
-    if (strcmp(event->command, "QUIT") == 0) {
-        printf("+OK POP3 server signing off\n");
+int transaction(state_machine_ptr stm, struct parser_event *event, char *buffer, int bytes) {
+    int len;
+    if (strncmp(event->command, "QUIT", bytes) == 0) {
+        len = strlen("+OK POP3 server signing off\n");
+        strncpy(buffer, "+OK POP3 server signing off\n", len);
         stm->state = EXIT;
     }
     else {
-        printf("-ERR Unknown command\n");
+        len = strlen("-ERR Unknown command\n");
+        strncpy(buffer, "-ERR Unknown command\n", len);
         stm->state = TRANSACTION;
     }
-    parser_reset(p);
-    free(event);
+    return len;
 }
 
-state_handler end(state_machine_ptr stm, struct parser *p) {
+int end(state_machine_ptr stm, struct parser_event *event, char *buffer, int bytes) {
     stm->state = EXIT;
-    parser_reset(p);    
+    return 0;
 }
 
 state_handler state_handlers[4] = {
@@ -69,6 +74,10 @@ void free_state_machine(state_machine_ptr stm) {
     free(stm);
 }
 
-void state_machine_run(state_machine_ptr stm, struct parser *p) {
-    (*state_handlers[stm->state])(stm, p);
+int state_machine_run(state_machine_ptr stm, struct parser_event *event, char *buffer, int bytes) {
+    return (*state_handlers[stm->state])(stm, event, buffer, bytes);
+}
+
+state get_state(state_machine_ptr stm) {
+    return stm->state;
 }
