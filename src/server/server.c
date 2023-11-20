@@ -48,6 +48,7 @@ int main(int argc, char const *argv[]){
         }
         else if (pid == 0){
             close(server_sock);
+            handle_connection(client_sock);
             exit(0);
         }
 
