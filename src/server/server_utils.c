@@ -101,8 +101,8 @@ int handle_connection(int client) {
     // Initialize user session
     session_ptr session = new_session(client);
 
-    while(get_session_state(session) == AUTHENTICATION) {
-        
+    while(get_session_state(session) != EXIT) {
+
         // Read from session
         struct parser_event * event = read_session(session);
 

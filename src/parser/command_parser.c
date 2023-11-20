@@ -77,7 +77,7 @@ struct parser_event * get_command(struct parser_event * event, struct parser * p
     int i;
 
     for(i = 0; i < bytes && event->type == MAYEQ; i++) {
-        parser_feed(p, buffer[i]);
+        event = parser_feed(p, buffer[i]);
     }
 
     *bytes_read = i;
