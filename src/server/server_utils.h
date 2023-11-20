@@ -1,6 +1,15 @@
 #ifndef SERVER_UTILS_H
 #define SERVER_UTILS_H
 
+#include <sys/socket.h>
+
+#define BUFF_SIZE 1024
+
+typedef struct buffer_t{
+    char buffer[BUFF_SIZE];
+    int write_pos;
+    int read_pos;
+} buffer_t;
 
 /* SETUP_SERVER
 *   - creates a socket and binds it to the specified port

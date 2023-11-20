@@ -67,13 +67,14 @@ struct parser * command_parser_init() {
     return parser_init(parser_no_classes(), &command_parser_definition);
 }
 
-struct parser_event * get_command(struct parser_event * event, struct parser * p) {
-    int c;
+struct parser_event * get_command(struct parser_event * event, struct parser * p, struct buffer_t * b, size_t bytes) {
+    int i;
+    char * buffer = b->buffer + b->read_pos;
 
-    while(event->type == MAYEQ) {
-        c = getchar();
-        event = parser_feed(p, c);
+    for(i = 0; i < bytes && event->type == MAYEQ; i++) {
+        parser_feed(p, buffer[i]);
     }
-    
+
+    b->read_pos += i;
     return event;
 }

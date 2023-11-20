@@ -8,6 +8,8 @@
  * un string es igual a otro de forma case insensitive.
  */
 #include "parser.h"
+#include <stdlib.h>
+#include "../server/server_utils.h"
 
 enum command_states {
     COMMAND,
@@ -26,6 +28,6 @@ enum command_event_types {
 
 struct parser * command_parser_init();
 
-struct parser_event * get_command(struct parser_event * event, struct parser * p);
+struct parser_event * get_command(struct parser_event * event, struct parser * p, struct buffer_t * b, size_t bytes);
 
 #endif

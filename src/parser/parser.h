@@ -29,6 +29,8 @@ struct parser_event {
     char arg2[ARG_MAX_LEN];
 
     unsigned int idx;
+
+    int bytes_received;
 };
 
 /** describe una transición entre estados  */
