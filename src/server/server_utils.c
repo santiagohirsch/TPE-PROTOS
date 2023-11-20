@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include "../state_machine/stm.h"
 #include "../parser/command_parser.h"
+#include "../session/session.h"
 
 
 //TODO: Agregar codigos de error al .h
@@ -38,7 +39,9 @@ int w_listen(int sockfd, int backlog){
 }
 
 int w_accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen){
+
     int ret = accept(sockfd, addr, addrlen);
+
     if(ret < 0){
         perror("error accepting socket");
         exit(1);
@@ -86,7 +89,7 @@ int setup_server(int port) {
 int accept_connection(int server_sock){
 
     struct sockaddr_storage client_address;
-    socklen_t  client_address_len = sizeof(client_address);
+    socklen_t client_address_len = sizeof(client_address);
 
     int client = w_accept(server_sock, (struct sockaddr *) &client_address, &client_address_len);
 
@@ -95,56 +98,22 @@ int accept_connection(int server_sock){
 
 int handle_connection(int client) {
 
-    // Initialize resources
-    struct parser *command_parser = command_parser_init();
+    // Initialize user session
+    session_ptr session = new_session(client);
 
-    struct parser_event *event = NULL;
+    while(get_session_state(session) == AUTHENTICATION) {
+        
+        // Read from session
+        struct parser_event * event = read_session(session);
 
-    state_machine_ptr state_machine = state_machine_init();
+        // Continue session
+        int bytes_to_write = continue_session(session);
 
-    struct buffer_t read_buffer = {{0}, 0, 0};
-
-    char write_buffer[BUFF_SIZE];
-
-    state_machine_run(state_machine, event, write_buffer, 0);
-
-    int read_pos_aux;
-
-    while(get_state(state_machine) == AUTHENTICATION) {
-        event = malloc(sizeof(struct parser_event));
-        read_pos_aux = 0; 
-
-        // If there is a possible command in the buffer, parse it
-        while(event->type == MAYEQ) {
-
-            // If the buffer is empty, read from the socket
-            if (read_buffer.read_pos == read_buffer.write_pos) {
-                event->bytes_received = w_recv(client, read_buffer.buffer + read_buffer.write_pos, BUFF_SIZE - read_buffer.write_pos, 0);
-                read_buffer.write_pos += event->bytes_received;
-            }
-
-            // Parse the command (save a copy of the read position because it will be modified)
-            read_pos_aux = read_buffer.read_pos;
-            event = get_command(event, command_parser, &read_buffer, read_buffer.write_pos - read_buffer.read_pos);
-        }
-
-        // If the command is complete, run the state machine
-        parser_reset(command_parser);
-
-        int len = state_machine_run(state_machine, event, write_buffer, read_buffer.write_pos - read_pos_aux);
-
-        int bytes_sent = 0;
-
-        // Send the response
-        while(bytes_sent < len) {
-            bytes_sent += w_send(client, write_buffer + bytes_sent, len - bytes_sent, 0);
-        }
+        // Write to session
+        write_session(session, bytes_to_write);
     }
 
-    // Clean resources and close connection
-    free(event);
-    free_state_machine(state_machine);
-    parser_destroy(command_parser);
+    // Close connection
     close(client);
     return 0;
 }
