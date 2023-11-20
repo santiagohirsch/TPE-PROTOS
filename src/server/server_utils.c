@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "server_utils.h"
+#include <unistd.h>
 
 #define BUFF_SIZE 1024
 
@@ -13,7 +14,7 @@
 int setup_server(int port) {
 
     struct sockaddr_in sock_address;
-    memset(&addr, 0, sizeof(sock_address));
+    memset(&sock_address, 0, sizeof(sock_address));
     sock_address.sin_family = AF_INET;
     sock_address.sin_addr.s_addr = htonl(INADDR_ANY);
     sock_address.sin_port = htons(port);
@@ -26,7 +27,7 @@ int setup_server(int port) {
 
     setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
 
-    if(bind(server,(struct sockaddr *)&addr, sizeof(addr)) < 0){
+    if(bind(server,(struct sockaddr *)&sock_address, sizeof(sock_address)) < 0){
         perror("bind error");
         goto finish;
     }
@@ -49,7 +50,7 @@ int accept_connection(int server_sock){
     struct sockaddr_storage client_address;
     socklen_t  client_address_len = sizeof(client_address);
 
-    int client_socket = accept(serverSock,(struct sockaddr *) &client_address, &client_address_len);
+    int client_socket = accept(server_sock,(struct sockaddr *) &client_address, &client_address_len);
     if(client_socket < 0){
         perror("accept error");
         return -1;
