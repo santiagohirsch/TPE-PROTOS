@@ -19,4 +19,11 @@ int setup_server(int port);
 */
 int accept_connection(int server);
 
+/* HANDLE_CONNECTION
+*   - handles a connection on the specified socket
+*   - returns 0 on success
+*   - returns -1 on error
+*   - params: client socket file descriptor
+*/
+int handle_connection(int client);
 #endif

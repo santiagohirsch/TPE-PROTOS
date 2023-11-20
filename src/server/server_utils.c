@@ -4,6 +4,12 @@
 #include <string.h>
 #include "server_utils.h"
 
+#define BUFF_SIZE 1024
+
+
+
+//TODO: Cambiar los checkeos de errores a otras funciones :)
+
 int setup_server(int port) {
 
     struct sockaddr_in sock_address;
@@ -50,4 +56,32 @@ int accept_connection(int server_sock){
     }
 
     return client_socket;
+}
+
+int handle_connection(int client) {
+    char buffer[BUFF_SIZE] = {0};
+    int bytes_read = 0;
+
+    while((bytes_read = recv(client, buffer, BUFF_SIZE, 0)) > 0){
+        
+        if (bytes_read < 0){
+            perror("recv error");
+            return -1;
+        }
+
+        int bytes_sent = send(client, buffer, bytes_read, 0);
+
+        if(bytes_sent < 0){
+            perror("send error");
+            return -1;
+        }
+
+        if(bytes_sent != bytes_read){
+            perror("send error");
+            return -1;
+        }
+    }
+
+    close(client);
+    return 0;
 }
