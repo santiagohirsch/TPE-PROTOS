@@ -110,7 +110,7 @@ int handle_connection(int client) {
         int bytes_to_write = continue_session(session);
 
         // Write to session
-        write_session(session, bytes_to_write);
+        send_session_response(session, bytes_to_write);
     }
 
     // Close connection

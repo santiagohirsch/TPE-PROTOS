@@ -13,7 +13,9 @@ void delete_user_session(session_ptr session);
 
 state get_session_state(session_ptr session);
 
-void write_session(session_ptr session, size_t len);
+void send_session_response(session_ptr session, size_t len);
+
+int write_session_response(session_ptr session, char * response, size_t len);
 
 struct parser_event * read_session(session_ptr session);
 
