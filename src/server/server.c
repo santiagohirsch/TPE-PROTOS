@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include "server_utils.h"
+#include "server_ADT.h"
 
 #define PORT 110
 #define MAX_CURRENT_CLIENTS 500
@@ -17,11 +18,8 @@ int main(int argc, char const *argv[]){
 
 
     // setup server
-    int server_sock = setup_server(PORT);
-    if(server_sock < 0){
-        perror("setup server error");
-        return 1;
-    }
+    server_t server = init_server("./mail", PORT);
+    int server_sock = get_server_socket();
 
     unsigned int child_count = 0;
 
@@ -35,12 +33,6 @@ int main(int argc, char const *argv[]){
         }
 
         int client_sock = accept_connection(server_sock);
-
-        if(client_sock < 0){
-            perror("accept connection error");
-            return 1;
-        }
-
 
         // fork -> child process: handle client, parent process: close server socket
         pid_t pid = fork();

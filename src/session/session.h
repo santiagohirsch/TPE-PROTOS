@@ -20,4 +20,8 @@ int write_session_response(session_ptr session, char * response, size_t len);
 struct parser_event * read_session(session_ptr session);
 
 int continue_session(session_ptr session);
+
+int get_username(session_ptr session, char * username);
+
+void set_username(session_ptr session, char * username, size_t len);
 #endif

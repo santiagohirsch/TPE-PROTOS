@@ -93,3 +93,15 @@ int continue_session(session_ptr session) {
     buffer_write_adv(&session->write_buffer, bytes_written);
     return bytes_written;
 }
+
+int get_username(session_ptr session, char * username) {
+    if (strlen(session->username) == 0) {
+        return -1;
+    }
+    strncpy(username, session->username, strlen(session->username));
+    return 0;
+}
+
+void set_username(session_ptr session, char * username, size_t len) {
+    strncpy(session->username, username, len);
+}
