@@ -16,9 +16,7 @@ struct parser {
     unsigned            state;
 
     /* evento que se retorna */
-    struct parser_event e1;
-    /* evento que se retorna */
-    struct parser_event e2;
+    struct parser_event event;
 };
 
 void
@@ -50,7 +48,6 @@ const struct parser_event *
 parser_feed(struct parser *p, const uint8_t c) {
     const unsigned type = p->classes[c];
 
-    p->e1.next = p->e2.next = 0;
 
     const struct parser_state_transition *state = p->def->states[p->state];
     const size_t n                              = p->def->states_n[p->state];
@@ -69,16 +66,12 @@ parser_feed(struct parser *p, const uint8_t c) {
         }
 
         if(matched) {
-            state[i].act1(&p->e1, c);
-            if(state[i].act2 != NULL) {
-                p->e1.next = &p->e2;
-                state[i].act2(&p->e2, c);
-            }
+            state[i].action(&p->event, c);
             p->state = state[i].dest;
             break;
         }
     }
-    return &p->e1;
+    return &p->event;
 }
 
 
