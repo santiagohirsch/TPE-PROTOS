@@ -30,7 +30,6 @@ struct parser_event {
 
     unsigned int idx;
 
-    int bytes_received;
 };
 
 /** describe una transición entre estados  */

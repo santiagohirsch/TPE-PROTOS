@@ -13,7 +13,7 @@ int main(int argc, char const *argv[]){
 
     // close stdin, stdout
     close(0);
-    close(1);
+    // close(1);
 
 
     // setup server
@@ -35,6 +35,7 @@ int main(int argc, char const *argv[]){
         }
 
         int client_sock = accept_connection(server_sock);
+
         if(client_sock < 0){
             perror("accept connection error");
             return 1;
@@ -57,12 +58,12 @@ int main(int argc, char const *argv[]){
 
         while(child_count){
 
-            // reap child processes
+            // end child processes
             pid = waitpid((pid_t) -1, NULL, WNOHANG);
             if(pid < 0){
                 perror("waitpid error");
             }
-            else if( pid == 0){
+            else if(pid == 0){
                 break;
             }
             else
