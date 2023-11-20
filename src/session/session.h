@@ -1,11 +1,12 @@
 #ifndef _SESSION_H_
 #define _SESSION_H_
 
-
-#include "../state_machine/stm.h"
 #include <stdbool.h>
+#include "../parser/command_parser.h"
 
 typedef struct user_session *session_ptr;
+
+#include "../state_machine/stm.h"
 
 session_ptr new_session(int socket);
 
@@ -24,4 +25,6 @@ int continue_session(session_ptr session);
 int get_username(session_ptr session, char * username);
 
 void set_username(session_ptr session, char * username, size_t len);
+
+struct parser_event * get_event(session_ptr session);
 #endif

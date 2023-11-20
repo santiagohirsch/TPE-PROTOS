@@ -89,7 +89,7 @@ struct parser_event * read_session(session_ptr session) {
 int continue_session(session_ptr session) {
     size_t wbytes = 0;
     char * wbuffer = (char *) buffer_write_ptr(&session->write_buffer, &wbytes);
-    int bytes_written = state_machine_run(session->stm, session->event, wbuffer, wbytes);
+    int bytes_written = state_machine_run(session->stm, session, wbuffer, wbytes);
     buffer_write_adv(&session->write_buffer, bytes_written);
     return bytes_written;
 }
@@ -104,4 +104,8 @@ int get_username(session_ptr session, char * username) {
 
 void set_username(session_ptr session, char * username, size_t len) {
     strncpy(session->username, username, len);
+}
+
+struct parser_event * get_event(session_ptr session) {
+    return session->event;
 }
