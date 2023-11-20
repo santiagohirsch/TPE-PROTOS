@@ -25,9 +25,11 @@ struct parser_event {
     unsigned type;
 
     char command[COMMAND_MAX_LEN];
+    int command_len;
     char arg1[ARG_MAX_LEN];
+    int arg1_len;
     char arg2[ARG_MAX_LEN];
-
+    int arg2_len;
     unsigned int idx;
 
 };

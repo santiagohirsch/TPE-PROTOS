@@ -10,18 +10,21 @@
 static void copy_command(struct parser_event *ret, const uint8_t c) {
     ret->type                = MAYEQ;
     ret->command[ret->idx++] = c;
+    ret->command_len++;
     ret->command[ret->idx]   = '\0';
 }
 
 static void copy_arg1(struct parser_event *ret, const uint8_t c) {
     ret->type                 = MAYEQ;
     ret->arg1[ret->idx++]     = c;
+    ret->arg1_len++;
     ret->arg1[ret->idx]       = '\0';
 }
 
 static void copy_arg2(struct parser_event *ret, const uint8_t c) {
     ret->type                 = MAYEQ;
     ret->arg2[ret->idx++]     = c;
+    ret->arg2_len++;
     ret->arg2[ret->idx]       = '\0';
 }
 
@@ -33,6 +36,9 @@ static void next_arg(struct parser_event *ret, const uint8_t c) {
 static void finish(struct parser_event *ret, const uint8_t c) {
     ret->type                 = EQ;
     ret->idx                  = 0;
+    ret->command_len++;
+    ret->arg1_len++;
+    ret->arg2_len++;
 }
 
 static const struct parser_state_transition ST_COMMAND[] =  {
