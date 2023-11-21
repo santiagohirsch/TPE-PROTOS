@@ -58,11 +58,14 @@ int pass_cmd(session_ptr session, char *arg, int arg_len, char *response, bool *
 
 static ssize_t get_file_size(const char * mail, const char * name) {
     struct stat st;
-    char * path = malloc((strlen(mail) + strlen(name) + 1) * sizeof(char));
+    int mail_len = strlen(mail);
+    int name_len = strlen(name);
+    // +1 for '/' and +1 for '\0'
+    char * path = malloc((mail_len + name_len + 2) * sizeof(char));
 
-    strcpy(path, mail);
+    strncpy(path, mail, mail_len);
     strcat(path, "/");
-    strncat(path, name, strlen(name));
+    strncat(path, name, name_len + 1);
 
     if(stat(path, &st) < 0) {
         free(path);
@@ -72,6 +75,17 @@ static ssize_t get_file_size(const char * mail, const char * name) {
     free(path);
 
     return st.st_size;
+}
+
+static void get_file_stats(DIR * dir, const char * path, int * file_count, int * bytes) {
+    struct dirent * entry;
+
+   while((entry = readdir(dir)) != NULL) {
+       if(entry->d_type == DT_REG) {
+           *file_count += 1;
+           *bytes += get_file_size(path, entry->d_name);
+       }
+   }
 }
 
 int stat_cmd(session_ptr session, char * arg, int len, char * response) {
@@ -100,14 +114,7 @@ int stat_cmd(session_ptr session, char * arg, int len, char * response) {
    int file_count = 0;
    int bytes = 0;
 
-   struct dirent * entry;
-
-   while((entry = readdir(dir)) != NULL) {
-       if(entry->d_type == DT_REG) {
-           file_count++;
-           bytes += get_file_size(mail_dir, entry->d_name);
-       }
-   }
+   get_file_stats(dir, mail_dir, &file_count, &bytes);
 
    sprintf(response, "+OK %d %d\n", file_count, bytes);
 
@@ -147,6 +154,7 @@ static struct dirent * read_files(DIR * dir, long msg_num) {
     return entry;
 }
 
+
 int list_cmd(session_ptr session, char * arg, int len, char * response, int bytes) {
     
     action_type action = pop_action(session);
@@ -176,7 +184,7 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
         entry = read_files(dir, msg_num - 1);
 
         if (entry == NULL || msg_num < 1) {
-            return sprintf(response, "-ERR There's no message %d.\r\n", msg_num);
+            return sprintf(response, "-ERR There's no message %ld.\r\n", msg_num);
         }
 
         strcat(path, entry->d_name);
@@ -190,7 +198,11 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
 
     // TODO: use real values
     if (action == PROCESS) {
-        current_line_len = sprintf(aux, "+OK %ld messages (%lld octets)\r\n", 0, 0);
+        rewinddir(dir);
+        int count = 0;
+        int bytes = 0;
+        get_file_stats(dir, path, &count, &bytes);
+        current_line_len = sprintf(aux, "+OK %d messages (%d octets)\r\n", count, bytes);
         response_len += current_line_len;
         strncpy(response, aux, current_line_len);
         response[response_len] = '\0';
