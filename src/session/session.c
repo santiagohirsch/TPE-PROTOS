@@ -7,11 +7,13 @@
 #include "../parser/command_parser.h"
 #include "../buffer/buffer.h"
 #include "../server/server_utils.h"
+#include "../utils/stack_ADT.h"
 
 struct user_dir {
     DIR * dir_ptr;
     int * mails;
     int mails_count;
+    int dir_index;
 };
 
 typedef struct user_session {
@@ -27,6 +29,7 @@ typedef struct user_session {
     struct user_dir * dir;
     struct fd_handler * fd_handler;
     int write_bytes;
+    stack_adt * actions;
 } user_session;
 
 
@@ -44,12 +47,16 @@ session_ptr new_session(int socket) {
     session->fd_handler->handle_read = read_session;
     session->fd_handler->handle_write = send_session_response;
     session->write_bytes = 0;
+    session->actions = new_stack();
+    push_action(session, READING);
+    push_action(session, PROCESSING);
     return session;
 }
 
 void delete_user_session(session_ptr session) {
     free_state_machine(session->stm);
     command_parser_destroy(session->parser);
+    delete_stack(session->actions);
     free(session->fd_handler);
     free(session);
 }
@@ -61,25 +68,32 @@ state get_session_state(session_ptr session) {
 void read_session(struct selector_key * key) {
     session_ptr session = (session_ptr) key->data;
 
+    action_type current_action = peek_action(session);
+
     if (session->event->type != MAYEQ) {
         command_parser_reset(session->parser);
     }
 
-    if (session->event->type == MAYEQ) {
-        if (!buffer_can_read(&session->read_buffer)) {
-            size_t wbytes = 0;
-            char * wbuffer = (char *) buffer_write_ptr(&session->read_buffer, &wbytes);
-            int bytes_received = w_recv(session->socket, wbuffer, wbytes, 0);
-            buffer_write_adv(&session->read_buffer, bytes_received);
-        }
-        size_t rbytes = 0;
-        size_t bytes_read = 0;
-        char * rbuffer = (char *) buffer_read_ptr(&session->read_buffer, &rbytes);
-        session->event = get_command(session->event, session->parser, rbuffer, rbytes, &bytes_read);
-        buffer_read_adv(&session->read_buffer, bytes_read);
+    if (current_action == READ) {
+        size_t wbytes = 0;
+        char * wbuffer = (char *) buffer_write_ptr(&session->read_buffer, &wbytes);
+        int bytes_received = w_recv(session->socket, wbuffer, wbytes, 0);
+        buffer_write_adv(&session->read_buffer, bytes_received);
     }
 
+    size_t rbytes = 0;
+    size_t bytes_read = 0;
+    char * rbuffer = (char *) buffer_read_ptr(&session->read_buffer, &rbytes);
+    session->event = get_command(session->event, session->parser, rbuffer, rbytes, &bytes_read);
+    buffer_read_adv(&session->read_buffer, bytes_read);
+
     if (session->event->type != MAYEQ) {
+        if (buffer_can_read(&session->read_buffer)) {
+            push_action(session, READING);
+        } else if (current_action == READING) {
+            pop_action(session);
+        }   
+        push_action(session, PROCESS);
         session->write_bytes = continue_session(session);
         selector_set_interest_key(key, OP_WRITE);
     }
@@ -97,11 +111,14 @@ int write_session_response(session_ptr session, char * response, size_t len) {
 void send_session_response(struct selector_key * key) {
     session_ptr session = (session_ptr) key->data;
 
-    if (get_state(session->stm) == START) {
-        continue_session(session);
+    action_type current_action = peek_action(session);
+
+    if (current_action == PROCESSING || current_action == PROCESS) {
+        session->write_bytes = continue_session(session);
+        return;
     }
 
-    if (session->write_bytes == 0 && buffer_can_read(&session->write_buffer)) {
+    if (current_action == READING) {
         read_session(key);
         return;
     }
@@ -112,7 +129,20 @@ void send_session_response(struct selector_key * key) {
         buffer_read_adv(&session->write_buffer, bytes_sent);
         session->write_bytes -= bytes_sent;
     }
-    if (session->write_bytes == 0 && !buffer_can_read(&session->write_buffer)) {
+    if (session->write_bytes != 0) {
+        if (current_action == WRITE) {
+            pop_action(session);
+        }
+        if (current_action != WRITING) {
+            push_action(session, WRITING);
+        }
+        return;
+    }
+    if (current_action == WRITE || current_action == WRITING) {
+        pop_action(session);
+        current_action = peek_action(session);  
+    }
+    if (current_action == READ) {
         selector_set_interest_key(key, OP_READ);
         return;
     }
@@ -123,6 +153,7 @@ int continue_session(session_ptr session) {
     char * wbuffer = (char *) buffer_write_ptr(&session->write_buffer, &wbytes);
     int bytes_written = state_machine_run(session->stm, session, wbuffer, wbytes);
     buffer_write_adv(&session->write_buffer, bytes_written);
+    push_action(session, WRITE);
     return bytes_written;
 }
 
@@ -191,4 +222,28 @@ void reset_marks(session_ptr session) {
 
 fd_handler * get_session_fd_handler(session_ptr session) {
     return session->fd_handler;
+}
+
+action_type pop_action(session_ptr session) {
+    action_type action;
+    int ret = pop(session->actions, &action);
+    return ret == -1 ? ret : action;
+}
+
+void push_action(session_ptr session, action_type action) {
+    push(session->actions, action);
+}
+
+action_type peek_action(session_ptr session) {
+    action_type action;
+    int ret = peek(session->actions, &action);
+    return ret == -1 ? ret : action;
+}
+
+int get_user_dir_idx(session_ptr session) {
+    return session->dir->dir_index;
+}
+
+void set_user_dir_idx(session_ptr session, int idx) {
+    session->dir->dir_index = idx;
 }
