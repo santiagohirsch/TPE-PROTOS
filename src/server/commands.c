@@ -120,3 +120,40 @@ int rset_cmd(session_ptr session, char * arg, int len, char * response) {
     reset_marks(session);
     return 0;
 }
+
+static struct dirent * read_files(DIR * dir, long msg_num) {
+    struct dirent * entry;
+    int i = 0;
+    while(i <= msg_num) {
+        entry = readdir(dir);
+        if(entry->d_type == DT_REG) {
+            i++;
+        }
+    
+    }
+    return entry;
+}
+
+int list_cmd(session_ptr session, char * arg, int len, char * response) {
+    DIR * dir = get_dir(session);
+    long msg_num = -1;
+    if (arg != NULL) {
+        msg_num = strtol(arg, NULL, 10);
+    }
+
+    struct dirent * entry = read_files(dir, msg_num);
+
+    char username[USERNAME_MAX_LEN] = {0};
+    char path[256] = {0};
+    int username_len = get_username(session, username);
+    strcpy(path, get_root_dir());
+    strcat(path, "/");
+    strncat(path, username, username_len);
+    strcat(path, "/");
+    strncat(path, entry->d_name, strlen(entry->d_name));
+
+    struct stat st;
+    stat(path, &st);
+    sprintf(response, "+OK List: %ld messages (%lld octets)\n", msg_num, st.st_size);
+    return strlen(response);
+}
