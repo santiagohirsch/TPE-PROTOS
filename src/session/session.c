@@ -166,7 +166,7 @@ static int get_file_count(DIR *dir) {
 }
 
 
-void init_client_dir(session_ptr session) {
+void init_user_dir(session_ptr session) {
     int file_count = get_file_count(session->dir->dir_ptr);
     session->dir->mails = (int *) calloc(file_count, sizeof(int));
     session->dir->mails_count = file_count;
@@ -186,7 +186,11 @@ int mark_to_delete(session_ptr session, int mail) {
 }
 
 void reset_marks(session_ptr session) {
-    memset(session->dir->mails,0,sizeof(session->dir->mails) * session->dir->mails_count);
+    memset(session->dir->mails,0,sizeof(session->dir->mails[0]) * session->dir->mails_count);
+}
+
+int * get_dir_mails(session_ptr session) {
+    return session->dir->mails;
 }
 
 fd_handler * get_session_fd_handler(session_ptr session) {

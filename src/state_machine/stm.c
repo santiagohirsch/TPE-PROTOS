@@ -38,7 +38,7 @@ int auth(state_machine_ptr stm, session_ptr session, char *buffer, int bytes) {
             stm->state = AUTHENTICATION;
         }
         stm->state = TRANSACTION;
-        init_client_dir(session);
+        init_user_dir(session);
     }
     else {
         len = strlen("-ERR Unknown command\n");
