@@ -11,6 +11,7 @@
 typedef struct user_session *session_ptr;
 
 #include "../state_machine/stm.h"
+#include "../selector/selector.h"
 
 session_ptr new_session(int socket);
 
@@ -18,11 +19,9 @@ void delete_user_session(session_ptr session);
 
 state get_session_state(session_ptr session);
 
-void send_session_response(session_ptr session, size_t len);
+void send_session_response(struct selector_key * key);
 
-int write_session_response(session_ptr session, char * response, size_t len);
-
-struct parser_event * read_session(session_ptr session);
+void read_session(struct selector_key * key);
 
 int continue_session(session_ptr session);
 
@@ -33,5 +32,7 @@ void set_username(session_ptr session, char * username, size_t len);
 struct parser_event * get_event(session_ptr session);
 
 void set_dir(session_ptr session, DIR * dir);
+
+fd_handler * get_session_fd_handler(session_ptr session);
 
 #endif

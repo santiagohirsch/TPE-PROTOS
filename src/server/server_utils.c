@@ -95,25 +95,3 @@ int accept_connection(int server_sock){
 
     return client;
 }
-
-int handle_connection(int client) {
-
-    // Initialize user session
-    session_ptr session = new_session(client);
-
-    while(get_session_state(session) != EXIT) {
-
-        // Read from session
-        struct parser_event * event = read_session(session);
-
-        // Continue session
-        int bytes_to_write = continue_session(session);
-
-        // Write to session
-        send_session_response(session, bytes_to_write);
-    }
-
-    // Close connection
-    close(client);
-    return 0;
-}
