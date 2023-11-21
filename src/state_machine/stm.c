@@ -29,6 +29,7 @@ int auth(state_machine_ptr stm, session_ptr session, char *buffer, int bytes) {
     else if (strncmp(event->command, "PASS", bytes) == 0) {
         pass_cmd(session, event->arg1, event->arg1_len, buffer);
         stm->state = TRANSACTION;
+        init_client_dir(session);
     }
     else {
         len = strlen("-ERR Unknown command\n");
@@ -39,14 +40,41 @@ int auth(state_machine_ptr stm, session_ptr session, char *buffer, int bytes) {
 }
 
 int transaction(state_machine_ptr stm, session_ptr session, char *buffer, int bytes) {
+    //TODO: ver si hay mas comandos transaction
     int len;
     struct parser_event *event = get_event(session);
+    char response[256] = {0};
     if (strncmp(event->command, "QUIT", bytes) == 0) {
         len = strlen("+OK POP3 server signing off\n");
         strncpy(buffer, "+OK POP3 server signing off\n", len);
         stm->state = EXIT;
     }
-    else {
+    else if (strncmp(event->command, "STAT", bytes) == 0) {
+        len = strlen("+OK STAT") + 1
+        strncopy(buffer, "+OK STAT", len);
+        strcat(buffer, " ");
+
+        len += stat_cmd(session, event->arg1, event->arg1_len, response);
+        strcat(buffer, response);
+        strcat(buffer, "\r\n");
+        len += 2;
+    } else if (strncmp(event->command,"DELE", bytes) == 0) {
+        int status = dele_cmd(session, event->arg1, event->arg1_len, response);
+        if (status == -1) {
+            len = strlen(response);
+            strncpy(buffer, response, len);
+            return len;
+        }
+        len = strlen("+OK DELE: message deleted\n");
+        strncpy(buffer, "+OK DELE: message deleted\n", len);
+    } else if (strncmp(event->command,"NOOP", bytes) == 0) {
+        len = strlen("+OK NOOP\r\n");
+        strncpy(buffer, "+OK NOOP\r\n", len);
+    } else if (strncmp(event->command,"RSET",bytes) == 0) {
+        rset_cmd(session, event->arg1, event->arg1_len, response);
+        len = strlen("+OK RSET\r\n");
+        strncpy(buffer, "+OK RSET\r\n", len);
+    } else {
         len = strlen("-ERR Unknown command\n");
         strncpy(buffer, "-ERR Unknown command\n", len);
         stm->state = TRANSACTION;
