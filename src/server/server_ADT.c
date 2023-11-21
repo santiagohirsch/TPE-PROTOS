@@ -1,7 +1,7 @@
 #include "server_ADT.h"
 #include <string.h>
 #include "server_utils.h"
-#include <sys/dirent.h>
+#include <dirent.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>

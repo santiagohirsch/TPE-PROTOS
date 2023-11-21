@@ -1,5 +1,6 @@
 #include "session.h"
 #include "../state_machine/stm.h"
+#include "connection.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
