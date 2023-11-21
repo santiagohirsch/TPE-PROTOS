@@ -8,6 +8,8 @@
 
 int user_cmd(session_ptr session, char *arg, int arg_len, char *response) {
 
+    pop_action(session);
+
     int len = strlen("+OK\n");
 
     strncpy(response, "+OK\n", len);
@@ -18,6 +20,8 @@ int user_cmd(session_ptr session, char *arg, int arg_len, char *response) {
 
 // TODO: Check password
 int pass_cmd(session_ptr session, char *arg, int arg_len, char *response, bool *is_authenticated) {
+
+    pop_action(session);
 
     int len = 0;
     char *username = malloc(USERNAME_MAX_LEN);
@@ -71,6 +75,9 @@ static ssize_t get_file_size(const char * mail, const char * name) {
 }
 
 int stat_cmd(session_ptr session, char * arg, int len, char * response) {
+   
+   pop_action(session);
+   
    DIR * dir = get_dir(session);
 
    if(!dir) {
@@ -108,6 +115,9 @@ int stat_cmd(session_ptr session, char * arg, int len, char * response) {
 }
 
 int dele_cmd(session_ptr session, char * arg, int len, char * response) {
+    
+    pop_action(session);
+    
     int status = mark_to_delete(session, atoi(arg));
     if (status < 0) {
         strcpy(response, "-ERR DELE: Maybe no such message\r\n");
@@ -117,6 +127,9 @@ int dele_cmd(session_ptr session, char * arg, int len, char * response) {
 }
 
 int rset_cmd(session_ptr session, char * arg, int len, char * response) {
+    
+    pop_action(session);
+    
     reset_marks(session);
     return 0;
 }
@@ -135,6 +148,9 @@ static struct dirent * read_files(DIR * dir, long msg_num) {
 }
 
 int list_cmd(session_ptr session, char * arg, int len, char * response, int bytes) {
+    
+    action_type action = pop_action(session);
+
     DIR * dir = get_dir(session);
     long msg_num = 0;
     if (arg != NULL) {
@@ -169,26 +185,41 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
     char aux[256] = {0};
 
     // TODO: use real values
-    current_line_len = sprintf(aux, "+OK %ld messages (%lld octets)\r\n", 0, 0);
-    response_len += current_line_len;
-    strncpy(response, aux, current_line_len);
-    response[response_len] = '\0';
+    if (action == PROCESS) {
+        current_line_len = sprintf(aux, "+OK %ld messages (%lld octets)\r\n", 0, 0);
+        response_len += current_line_len;
+        strncpy(response, aux, current_line_len);
+        response[response_len] = '\0';
+        rewinddir(dir);
+        set_user_dir_idx(session, 0);
+    }
+    
 
-    rewinddir(dir);
+    int idx = get_user_dir_idx(session);
     entry = readdir(dir);
+    long location = 0;
 
     while (response_len + current_line_len < bytes && entry != NULL) {
         if (entry->d_type == DT_REG) {
             path[path_len] = '\0';
             strcat(path, entry->d_name);
             stat(path, &st);
-            current_line_len = sprintf(aux, "%ld %lld\r\n", msg_num++, st.st_size);
+            current_line_len = sprintf(aux, "%ld %lld\r\n", idx, st.st_size);
             if (response_len + current_line_len < bytes) {
                 response_len += current_line_len;
                 strncat(response, aux, current_line_len);
+                idx++;
             }
         }
+        location = telldir(dir);
         entry = readdir(dir);
+    }
+
+    if (entry != NULL) {
+        seekdir(dir, location);
+        set_dir(session, dir);
+        set_user_dir_idx(session, idx);
+        push_action(session, PROCESSING);
     }
 
     return response_len;

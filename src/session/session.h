@@ -11,10 +11,12 @@
 typedef struct user_session *session_ptr;
 
 typedef enum action_type {
-    READING = 0,
+    READ = 0,
+    READING,
+    PROCESS,
     PROCESSING,
-    WRITING,
-    DONE
+    WRITE,
+    WRITING
 } action_type;
 
 #include "../state_machine/stm.h"
@@ -49,5 +51,15 @@ void init_client_dir(session_ptr session);
 int mark_to_delete(session_ptr session, int mail);
 
 void reset_marks(session_ptr session);
+
+action_type pop_action(session_ptr session);
+
+void push_action(session_ptr session, action_type action);
+
+action_type peek_action(session_ptr session);
+
+int get_user_dir_idx(session_ptr session);
+
+void set_user_dir_idx(session_ptr session, int idx);
 
 #endif
