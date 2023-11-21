@@ -24,7 +24,7 @@ int main(int argc, char const *argv[]){
 
     // close stdin, stdout
     close(0);
-    close(1);
+    // close(1);
 
     // handle signals
     signal(SIGINT, handle_signal);
@@ -69,5 +69,5 @@ int main(int argc, char const *argv[]){
 void accept_passive_connection(struct selector_key *key){
     int socket_fd = accept_connection(key->fd);
     session_ptr session = new_session(socket_fd);
-    selector_register(key->s, socket_fd, get_session_fd_handler(session), OP_READ, session);
+    selector_register(key->s, socket_fd, get_session_fd_handler(session), OP_WRITE, session);
 }

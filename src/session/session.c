@@ -88,6 +88,11 @@ int write_session_response(session_ptr session, char * response, size_t len) {
 
 void send_session_response(struct selector_key * key) {
     session_ptr session = (session_ptr) key->data;
+
+    if (get_state(session->stm) == START) {
+        continue_session(session);
+    }
+
     if (session->write_bytes == 0 && buffer_can_read(&session->write_buffer)) {
         read_session(key);
         return;

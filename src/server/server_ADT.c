@@ -116,6 +116,7 @@ void close_server() {
     close(server->socket);
     free_users();
     free_users_dirs();
+    free(server->fd_handler);
     free(server);
     server = NULL;
 }
