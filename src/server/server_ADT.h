@@ -5,12 +5,17 @@
 #include "../session/session.h"
 
 typedef struct server *server_t;
-typedef struct user_dir *user_dir_t;
+
+struct user_dir {
+    char username[USERNAME_MAX_LEN];
+    char pass[16];
+    bool is_open;
+};
 
 
-server_t init_server(char * root_dir, int port);
+server_t init_server(char * root_dir, int argc, char * argv[]);
 
-user_dir_t get_user_dir(char * username);
+struct user_dir * get_user_dir(char * username, int len);
 
 int get_server_socket();
 

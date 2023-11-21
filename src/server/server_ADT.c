@@ -5,13 +5,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 #define BLOCK 5
-
-struct user_dir {
-    char * username;
-    char * pass;
-};
+#define PORT 110
 
 typedef struct user_node {
     session_ptr session;
@@ -28,6 +25,8 @@ struct server {
 };
 
 struct server * server = NULL;
+
+static int users_registered = 0;
 
 static struct user_dir ** init_users_dirs(char * root_dir, int * user_count) {
     DIR * dir = opendir(root_dir);
@@ -60,12 +59,48 @@ static struct user_dir ** init_users_dirs(char * root_dir, int * user_count) {
     return users;
 }
 
-struct server * init_server(char * root_dir, int port) {
+static int handle_user_option(int argc, char * argv[]) {
+    if(argc == 0) {
+        fprintf(stderr, "user option requires an argument\n");
+        return -1;
+    }
+
+    const char * delimeter = ":";
+    char * username = strtok(argv[0], delimeter);
+    if(username == NULL) {
+        fprintf(stderr, "user option requires an argument\n");
+        return -1;
+    }
+
+    int idx = -1;
+    for(int i = 0; i < server->user_count; i++) {
+        if(strcmp(argv[0], server->users_dirs[i]->username) == 0) {
+            idx = i;
+        }
+    }
+    if(idx == -1) {
+        return -1;
+    }
+    char * password = strtok(NULL, delimeter);
+    if(password == NULL) {
+        fprintf(stderr, "no password provided\n");
+        return -1;
+    }
+    if(strlen(password) > 15) {
+        fprintf(stderr, "password too long\n");
+        return -1;
+    }
+    strncpy(server->users_dirs[idx]->pass, password, strlen(password));
+    users_registered++;
+    return 1;
+}
+
+struct server * init_server(char * root_dir, int argc, char * argv[]) {
     if(server != NULL) {
         return server;
     }
     
-    int server_socket = setup_server(port);
+    int server_socket = setup_server(PORT);
     if(server_socket < 0) {
         perror("setup server error");
         return NULL;
@@ -75,6 +110,23 @@ struct server * init_server(char * root_dir, int port) {
     server->socket = server_socket;
     server->root_dir = root_dir;
     server->users_dirs = init_users_dirs(root_dir, &server->user_count);
+
+    argv++;
+    argc--;
+    while(argc > 0) {
+        if(strcmp(argv[0],"-u") == 0) {
+            argv++;
+            argc--;
+            handle_user_option(argc,argv);
+        }
+        else {
+            fprintf(stderr, "invalid command\n");
+            break;
+        }
+        argv++;
+        argc--;
+    }
+
     server->users = NULL;
     server->user_count = 0;
     server->fd_handler = malloc(sizeof(struct fd_handler));
@@ -85,9 +137,10 @@ int get_server_socket() {
     return server->socket;
 }
 
-user_dir_t get_user_dir(char * username) {
+struct user_dir * get_user_dir(char * username, int len) {
     for(int i = 0; i < server->user_count; i++) {
-        if(strcmp(server->users_dirs[i]->username, username) == 0) {
+        if(strncmp(server->users_dirs[i]->username, username,len) == 0) {
+
             return server->users_dirs[i];
         }
     }
