@@ -8,9 +8,6 @@
 #include "../buffer/buffer.h"
 #include "../server/server_utils.h"
 
-#define BUFFER_SIZE 1024
-#define USERNAME_MAX_LEN 40
-
 typedef struct user_session {
     int socket;
     buffer read_buffer;
@@ -21,6 +18,7 @@ typedef struct user_session {
     char username[USERNAME_MAX_LEN];
     struct parser * parser;
     struct parser_event * event;
+    DIR * dir;
 } user_session;
 
 session_ptr new_session(int socket) {
@@ -108,4 +106,8 @@ void set_username(session_ptr session, char * username, size_t len) {
 
 struct parser_event * get_event(session_ptr session) {
     return session->event;
+}
+
+void set_dir(session_ptr session, DIR * dir) {
+    session->dir = dir;
 }

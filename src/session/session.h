@@ -1,8 +1,12 @@
 #ifndef _SESSION_H_
 #define _SESSION_H_
 
+#define BUFFER_SIZE 1024
+#define USERNAME_MAX_LEN 40
+
 #include <stdbool.h>
 #include "../parser/command_parser.h"
+#include <dirent.h>
 
 typedef struct user_session *session_ptr;
 
@@ -27,4 +31,7 @@ int get_username(session_ptr session, char * username);
 void set_username(session_ptr session, char * username, size_t len);
 
 struct parser_event * get_event(session_ptr session);
+
+void set_dir(session_ptr session, DIR * dir);
+
 #endif

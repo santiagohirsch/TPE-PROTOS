@@ -13,4 +13,6 @@ int get_server_socket();
 
 void close_server();
 
+char * get_root_dir();
+
 #endif

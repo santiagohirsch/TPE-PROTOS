@@ -89,3 +89,7 @@ void close_server() {
     free(server);
     server = NULL;
 }
+
+char * get_root_dir() {
+    return server->root_dir;
+}

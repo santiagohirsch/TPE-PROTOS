@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "stm.h"
 #include "../parser/command_parser.h"
+#include "../server/commands.h"
 
 typedef struct state_machine {
     state state;
@@ -19,16 +20,14 @@ int start(state_machine_ptr stm, session_ptr session, char *buffer, int bytes) {
 }
 
 int auth(state_machine_ptr stm, session_ptr session, char *buffer, int bytes) {
-    int len;
+    int len = 0;
     struct parser_event *event = get_event(session);
     if (strncmp(event->command, "USER", bytes) == 0) {
-        len = strlen("+OK\n");
-        strncpy(buffer, "+OK\n", len);
+        user_cmd(session, event->arg1, event->arg1_len, buffer);
         stm->state = AUTHENTICATION;
     }
     else if (strncmp(event->command, "PASS", bytes) == 0) {
-        len = strlen("+OK\n");
-        strncpy(buffer, "+OK\n", len);
+        pass_cmd(session, event->arg1, event->arg1_len, buffer);
         stm->state = TRANSACTION;
     }
     else {
@@ -78,8 +77,6 @@ void free_state_machine(state_machine_ptr stm) {
 }
 
 int state_machine_run(state_machine_ptr stm, session_ptr session, char *buffer, int bytes) {
-    printf("state_machine_run\n");
-    printf("state: %d\n", stm->state);
     return (*state_handlers[stm->state])(stm, session, buffer, bytes);
 }
 
