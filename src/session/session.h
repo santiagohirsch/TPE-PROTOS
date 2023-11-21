@@ -35,4 +35,12 @@ void set_dir(session_ptr session, DIR * dir);
 
 fd_handler * get_session_fd_handler(session_ptr session);
 
+DIR * get_dir(session_ptr session);
+
+void init_client_dir(session_ptr session);
+
+int mark_to_delete(session_ptr session, int mail);
+
+void reset_marks(session_ptr session);
+
 #endif

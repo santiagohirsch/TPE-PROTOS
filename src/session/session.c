@@ -8,6 +8,12 @@
 #include "../buffer/buffer.h"
 #include "../server/server_utils.h"
 
+struct user_dir {
+    DIR * dir_ptr;
+    int * mails;
+    int mails_count;
+};
+
 typedef struct user_session {
     int socket;
     buffer read_buffer;
@@ -18,10 +24,12 @@ typedef struct user_session {
     char username[USERNAME_MAX_LEN];
     struct parser * parser;
     struct parser_event * event;
-    DIR * dir;
+    struct user_dir * dir;
     struct fd_handler * fd_handler;
     int write_bytes;
 } user_session;
+
+
 
 session_ptr new_session(int socket) {
     session_ptr session = malloc(sizeof(user_session));
@@ -135,7 +143,50 @@ struct parser_event * get_event(session_ptr session) {
 }
 
 void set_dir(session_ptr session, DIR * dir) {
-    session->dir = dir;
+    session->dir->dir_ptr = dir;
+}
+
+DIR * get_dir(session_ptr session) {
+    return session->dir->dir_ptr;
+}
+
+static int get_file_count(DIR *dir) {
+    if (dir == NULL)
+        return -1;
+
+    struct dirent *entry;
+    int result = 0;
+
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_type == DT_REG)
+            result++;
+    }
+
+    return result;
+}
+
+
+void init_client_dir(session_ptr session) {
+    int file_count = get_file_count(session->dir->dir_ptr);
+    session->dir->mails = (int *) calloc(file_count, sizeof(int));
+    session->dir->mails_count = file_count;
+}
+
+static char is_marked_to_delete(session_ptr session, int mail) {
+    return session->dir->mails[mail -1] == true;
+}
+
+int mark_to_delete(session_ptr session, int mail) {
+    if( is_marked_to_delete(session, mail) || !((mail) > (0) && (mail) <= (session->dir->mails_count)) ) {
+        return -1;
+    }
+
+    session->dir->mails[mail - 1] = true;
+    return 0;
+}
+
+void reset_marks(session_ptr session) {
+    memset(session->dir->mails,0,sizeof(session->dir->mails) * session->dir->mails_count);
 }
 
 fd_handler * get_session_fd_handler(session_ptr session) {
