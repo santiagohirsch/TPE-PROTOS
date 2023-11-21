@@ -173,11 +173,15 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
     if (len > 1) {
         msg_num = strtol(arg, NULL, 10);
         rewinddir(dir);
-        entry = read_files(dir, msg_num);
+        entry = read_files(dir, msg_num - 1);
+
+        if (entry == NULL || msg_num < 1) {
+            return sprintf(response, "-ERR There's no message %d.\r\n", msg_num);
+        }
+
         strcat(path, entry->d_name);
         stat(path, &st);
-        sprintf(response, "+OK %ld %lld\r\n", msg_num, st.st_size);
-        return strlen(response);
+        return sprintf(response, "+OK %ld %lld\r\n", msg_num, st.st_size);
     }
 
     int response_len = 0;
@@ -191,7 +195,7 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
         strncpy(response, aux, current_line_len);
         response[response_len] = '\0';
         rewinddir(dir);
-        set_user_dir_idx(session, 0);
+        set_user_dir_idx(session, 1);
     }
     
 
@@ -219,6 +223,15 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
         seekdir(dir, location);
         set_dir(session, dir);
         set_user_dir_idx(session, idx);
+        push_action(session, PROCESSING);
+        return response_len;
+    }
+
+    current_line_len = sprintf(aux, ".\r\n");
+    if (response_len + current_line_len < bytes) {
+        response_len += current_line_len;
+        strncat(response, aux, current_line_len);
+    } else {
         push_action(session, PROCESSING);
     }
 

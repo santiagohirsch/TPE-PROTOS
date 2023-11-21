@@ -50,6 +50,8 @@ session_ptr new_session(int socket) {
     session->actions = new_stack();
     push_action(session, READING);
     push_action(session, PROCESSING);
+    session->dir = calloc(1, sizeof(struct user_dir));
+    session->dir->dir_index = 1;
     return session;
 }
 
