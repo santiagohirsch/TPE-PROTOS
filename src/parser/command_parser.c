@@ -96,6 +96,9 @@ void command_parser_reset(struct parser * p){
     event->command_len = 0;
     event->arg1_len = 0;
     event->arg2_len = 0;
+    memset(event->command, 0, sizeof(event->command));
+    memset(event->arg1, 0, sizeof(event->arg1));
+    memset(event->arg2, 0, sizeof(event->arg2));
 }
 
 struct parser_event * get_command_parser_event(struct parser * p){
