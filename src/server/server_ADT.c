@@ -38,7 +38,7 @@ static struct user_dir ** init_users(char * root_dir, int * user_count) {
                 if (count % BLOCK == 0) {
                     users = realloc(users, sizeof(struct user_dir *) * (count + BLOCK));
                 }
-                users[count] = malloc(sizeof(struct user_dir));
+                users[count] = calloc(1,sizeof(struct user_dir));
                 strncpy(users[count]->username, entry->d_name, strlen(entry->d_name));
                 count++;
             }
