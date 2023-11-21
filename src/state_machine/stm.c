@@ -25,12 +25,20 @@ int auth(state_machine_ptr stm, session_ptr session, char *buffer, int bytes) {
     if (strncmp(event->command, "USER", bytes) == 0) {
         user_cmd(session, event->arg1, event->arg1_len, buffer);
         stm->state = AUTHENTICATION;
-    }
-    else if (strncmp(event->command, "PASS", bytes) == 0) {
-        pass_cmd(session, event->arg1, event->arg1_len, buffer);
+    } else if (strncmp(event->command, "PASS", bytes) == 0) {
+        bool is_authenticated = false;
+        pass_cmd(session, event->arg1, event->arg1_len, buffer, &is_authenticated);
+        if (is_authenticated) {
+            len = strlen("+OK Logged in.\n");
+            strncpy(buffer, "+OK Logged in.\n", len);
+            stm->state = TRANSACTION;
+        } else {
+            len = strlen("-ERR [AUTH] Authentication failed\n");
+            strncpy(buffer, "-ERR [AUTH] Authentication failed\n", len);
+            stm->state = AUTHENTICATION;
+        }
         stm->state = TRANSACTION;
-    }
-    else {
+    } else {
         len = strlen("-ERR Unknown command\n");
         strncpy(buffer, "-ERR Unknown command\n", len);
         stm->state = AUTHENTICATION;

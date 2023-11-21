@@ -14,17 +14,19 @@ int user_cmd(session_ptr session, char *arg, int arg_len, char *response) {
 }
 
 // TODO: Check password
-void pass_cmd(session_ptr session, char *arg, int arg_len, char *response) {
+int pass_cmd(session_ptr session, char *arg, int arg_len, char *response, bool *is_authenticated) {
 
+    int len = 0;
     char *username = malloc(USERNAME_MAX_LEN);
     int username_len = get_username(session, username);
 
     if (username_len == 0) {
-        int len = strlen("-ERR [AUTH] Authentication failed\n");
+        len = strlen("-ERR [AUTH] Authentication failed\n");
         strncpy(response, "-ERR [AUTH] Authentication failed\n", len);
-        return;
+        *is_authenticated = false;
+        return len;
     }
-    int len = strlen("+OK\n");
+    len = strlen("+OK\n");
 
     strncpy(response, "+OK\n", len);
 
@@ -36,5 +38,13 @@ void pass_cmd(session_ptr session, char *arg, int arg_len, char *response) {
 
     strcat(dir, username);
 
-    set_dir(session, opendir(dir));
+    DIR *dir_ptr = opendir(dir);
+
+    set_dir(session, dir_ptr);
+
+    *is_authenticated = true;
+
+    closedir(dir_ptr);
+
+    return len;
 }
