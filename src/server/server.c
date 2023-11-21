@@ -14,7 +14,7 @@
 static bool received_signal = false;
 
 static void handle_signal(int signal){
-    printf("signal %d received\n");
+    printf("signal %d received\n", signal);
     received_signal = true;
 }
 
