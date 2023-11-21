@@ -10,6 +10,13 @@
 
 typedef struct user_session *session_ptr;
 
+typedef enum action_type {
+    READING = 0,
+    PROCESSING,
+    WRITING,
+    DONE
+} action_type;
+
 #include "../state_machine/stm.h"
 #include "../selector/selector.h"
 
