@@ -50,8 +50,8 @@ int transaction(state_machine_ptr stm, session_ptr session, char *buffer, int by
         stm->state = EXIT;
     }
     else if (strncmp(event->command, "STAT", bytes) == 0) {
-        len = strlen("+OK STAT") + 1
-        strncopy(buffer, "+OK STAT", len);
+        len = strlen("+OK STAT") + 1;
+        strncpy(buffer, "+OK STAT", len);
         strcat(buffer, " ");
 
         len += stat_cmd(session, event->arg1, event->arg1_len, response);

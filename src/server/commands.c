@@ -2,6 +2,9 @@
 #include "server_ADT.h"
 #include "../session/session.h"
 #include <string.h>
+#include <sys/stat.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 int user_cmd(session_ptr session, char *arg, int arg_len, char *response) {
 
@@ -73,7 +76,7 @@ int stat_cmd(session_ptr session, char * arg, int len, char * response) {
    } 
 
    char mail_dir[256] = {0};
-   strcopy(mail_dir, get_root_dir());
+   strcpy(mail_dir, get_root_dir());
    strcat(mail_dir, "/");
    strncat(mail_dir, username, username_len);
 
@@ -97,7 +100,7 @@ int stat_cmd(session_ptr session, char * arg, int len, char * response) {
 int dele_cmd(session_ptr session, char * arg, int len, char * response) {
     int status = mark_to_delete(session, atoi(arg));
     if (status < 0) {
-        strcopy(response, "-ERR DELE: Maybe no such message\r\n")
+        strcpy(response, "-ERR DELE: Maybe no such message\r\n");
         return -1;
     }
     return 0;

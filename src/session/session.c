@@ -12,7 +12,7 @@ struct client_dir {
     DIR * dir_ptr;
     int * mails;
     int mails_count;
-}
+};
 
 typedef struct user_session {
     int socket;
@@ -141,24 +141,24 @@ static int get_file_count(DIR *dir) {
 
 
 void init_client_dir(session_ptr session) {
-    int file_count = get_file_count(session->client_dir->dir_ptr);
-    session->client_dir->mails = (int *) calloc(file_count, sizeof(int));
-    session->client_dir->mails_count = file_count;
+    int file_count = get_file_count(session->dir->dir_ptr);
+    session->dir->mails = (int *) calloc(file_count, sizeof(int));
+    session->dir->mails_count = file_count;
 }
 
 static char is_marked_to_delete(session_ptr session, int mail) {
-    return session->client_dir->mails[mail -1] == true;
+    return session->dir->mails[mail -1] == true;
 }
 
 int mark_to_delete(session_ptr session, int mail) {
-    if( is_marked_to_delete(session, mail) || !((mail) > (0) && (mail) <= (session->client_dir->mails_count)) ) {
+    if( is_marked_to_delete(session, mail) || !((mail) > (0) && (mail) <= (session->dir->mails_count)) ) {
         return -1;
     }
 
-    session->client_dir->mails[mail - 1] = true;
+    session->dir->mails[mail - 1] = true;
     return 0;
 }
 
-void unmark_mails(session_ptr session) {
-    memset(session->client_dir->mails,0,sizeof(session->client_dir->mails) * session->client_dir->mails_count);
+void reset_marks(session_ptr session) {
+    memset(session->dir->mails,0,sizeof(session->dir->mails) * session->dir->mails_count);
 }
