@@ -204,7 +204,7 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
             path[path_len] = '\0';
             strcat(path, entry->d_name);
             stat(path, &st);
-            current_line_len = sprintf(aux, "%ld %lld\r\n", idx, st.st_size);
+            current_line_len = sprintf(aux, "%d %lld\r\n", idx, st.st_size);
             if (response_len + current_line_len < bytes) {
                 response_len += current_line_len;
                 strncat(response, aux, current_line_len);

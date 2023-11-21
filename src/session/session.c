@@ -29,7 +29,7 @@ typedef struct user_session {
     struct user_dir * dir;
     struct fd_handler * fd_handler;
     int write_bytes;
-    stack_adt * actions;
+    stack_adt actions;
 } user_session;
 
 

@@ -11,7 +11,7 @@ typedef struct stack_cdt {
 } stack_cdt;
 
 
-stack_adt new_stack_adt() {
+stack_adt new_stack() {
     stack_adt stack = malloc(sizeof(stack_cdt));
     // CHECK MALLOC
     stack->first = NULL;
