@@ -73,3 +73,8 @@ dkms.conf
 .history
 .ionide
 
+# CLion IDE
+.idea/
+
+# Other files
+.bash_history
