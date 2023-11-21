@@ -34,4 +34,15 @@ struct parser_event * get_event(session_ptr session);
 
 void set_dir(session_ptr session, DIR * dir);
 
+DIR * get_dir(session_ptr session);
+
+static int get_file_count(DIR *dir);
+
+
+void init_client_dir(session_ptr session);
+
+int mark_to_delete(session_ptr session, int mail);
+
+void unmark_mails(session_ptr session);
+
 #endif
