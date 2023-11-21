@@ -14,6 +14,6 @@ int dele_cmd(session_ptr session, char * arg, int len, char * response);
 
 int rset_cmd(session_ptr session, char * arg, int len, char * response);
 
-int list_cmd(session_ptr session, char * arg, int len, char * response);
+int list_cmd(session_ptr session, char * arg, int len, char * response, int bytes);
 
 #endif

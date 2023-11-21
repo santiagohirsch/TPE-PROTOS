@@ -122,9 +122,9 @@ int rset_cmd(session_ptr session, char * arg, int len, char * response) {
 }
 
 static struct dirent * read_files(DIR * dir, long msg_num) {
-    struct dirent * entry;
+    struct dirent * entry = readdir(dir);
     int i = 0;
-    while(i <= msg_num) {
+    while(i < msg_num && entry != NULL) {
         entry = readdir(dir);
         if(entry->d_type == DT_REG) {
             i++;
@@ -134,9 +134,9 @@ static struct dirent * read_files(DIR * dir, long msg_num) {
     return entry;
 }
 
-int list_cmd(session_ptr session, char * arg, int len, char * response) {
+int list_cmd(session_ptr session, char * arg, int len, char * response, int bytes) {
     DIR * dir = get_dir(session);
-    long msg_num = -1;
+    long msg_num = 0;
     if (arg != NULL) {
         msg_num = strtol(arg, NULL, 10);
     }
@@ -150,10 +150,46 @@ int list_cmd(session_ptr session, char * arg, int len, char * response) {
     strcat(path, "/");
     strncat(path, username, username_len);
     strcat(path, "/");
-    strncat(path, entry->d_name, strlen(entry->d_name));
+    int path_len = strlen(path);
 
     struct stat st;
-    stat(path, &st);
-    sprintf(response, "+OK List: %ld messages (%lld octets)\n", msg_num, st.st_size);
-    return strlen(response);
+
+    if (len > 1) {
+        msg_num = strtol(arg, NULL, 10);
+        rewinddir(dir);
+        entry = read_files(dir, msg_num);
+        strcat(path, entry->d_name);
+        stat(path, &st);
+        sprintf(response, "+OK %ld %lld\r\n", msg_num, st.st_size);
+        return strlen(response);
+    }
+
+    int response_len = 0;
+    int current_line_len = 0;
+    char aux[256] = {0};
+
+    // TODO: use real values
+    current_line_len = sprintf(aux, "+OK %ld messages (%lld octets)\r\n", 0, 0);
+    response_len += current_line_len;
+    strncpy(response, aux, current_line_len);
+    response[response_len] = '\0';
+
+    rewinddir(dir);
+    entry = readdir(dir);
+
+    while (response_len + current_line_len < bytes && entry != NULL) {
+        if (entry->d_type == DT_REG) {
+            path[path_len] = '\0';
+            strcat(path, entry->d_name);
+            stat(path, &st);
+            current_line_len = sprintf(aux, "%ld %lld\r\n", msg_num++, st.st_size);
+            if (response_len + current_line_len < bytes) {
+                response_len += current_line_len;
+                strncat(response, aux, current_line_len);
+            }
+        }
+        entry = readdir(dir);
+    }
+
+    return response_len;
 }

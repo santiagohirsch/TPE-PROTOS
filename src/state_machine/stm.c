@@ -84,7 +84,7 @@ int transaction(state_machine_ptr stm, session_ptr session, char *buffer, int by
         len = strlen("+OK RSET\r\n");
         strncpy(buffer, "+OK RSET\r\n", len);
     } else if (strncmp(event->command, "LIST", bytes) == 0) {
-        len = list_cmd(session, event->arg1, event->arg1_len, response);
+        len = list_cmd(session, event->arg1, event->arg1_len, response, bytes);
     } else {
         len = strlen("-ERR Unknown command\n");
         strncpy(buffer, "-ERR Unknown command\n", len);

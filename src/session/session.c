@@ -147,7 +147,6 @@ void set_dir(session_ptr session, DIR * dir) {
 }
 
 DIR * get_dir(session_ptr session) {
-    rewinddir(session->dir->dir_ptr);
     return session->dir->dir_ptr;
 }
 
