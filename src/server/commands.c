@@ -27,10 +27,18 @@ int pass_cmd(session_ptr session, char *arg, int arg_len, char *response, bool *
     char *username = malloc(USERNAME_MAX_LEN);
     int username_len = get_username(session, username);
 
-    if (username_len == 0) {
-        len = strlen("-ERR [AUTH] Authentication failed\n");
-        strncpy(response, "-ERR [AUTH] Authentication failed\n", len);
+    if (username_len <= 0) {
+        len = strlen("-ERR [AUTH] Authentication failed\r\n");
+        strncpy(response, "-ERR [AUTH] Authentication failed\r\n", len);
         *is_authenticated = false;
+        return len;
+    }
+
+    struct user_dir * user_dir = get_user_dir(username, username_len);
+
+    if (strcmp(user_dir->pass, arg) != 0) {
+        len = strlen("-ERR [AUTH] Authentication failed\r\n");
+        strncpy(response, "-ERR [AUTH] Authentication failed\r\n", len);
         return len;
     }
     len = strlen("+OK\n");
@@ -56,16 +64,14 @@ int pass_cmd(session_ptr session, char *arg, int arg_len, char *response, bool *
     return len;
 }
 
-static ssize_t get_file_size(const char * mail, const char * name) {
+static ssize_t get_file_size(const char * mail, const char * file) {
     struct stat st;
     int mail_len = strlen(mail);
-    int name_len = strlen(name);
-    // +1 for '/' and +1 for '\0'
-    char * path = malloc((mail_len + name_len + 2) * sizeof(char));
-
+    int file_len = strlen(file);
+    char * path = (char *) calloc(mail_len + file_len + 2, sizeof(char));
     strncpy(path, mail, mail_len);
     strcat(path, "/");
-    strncat(path, name, name_len + 1);
+    strncat(path, file, file_len + 1);
 
     if(stat(path, &st) < 0) {
         free(path);
@@ -114,7 +120,20 @@ int stat_cmd(session_ptr session, char * arg, int len, char * response) {
    int file_count = 0;
    int bytes = 0;
 
-   get_file_stats(dir, mail_dir, &file_count, &bytes);
+   struct dirent * entry;
+
+   int * user_mails = get_dir_mails(session);
+   int i = 0;
+   while((entry = readdir(dir)) != NULL) {
+       if(entry->d_type == DT_REG) {
+           if(!user_mails[i]) {
+            file_count++;
+           bytes += get_file_size(mail_dir, entry->d_name);}
+       }
+       i++;
+   }
+
+//    get_file_stats(dir, mail_dir, &file_count, &bytes);
 
    sprintf(response, "+OK %d %d\n", file_count, bytes);
 

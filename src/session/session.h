@@ -46,7 +46,7 @@ fd_handler * get_session_fd_handler(session_ptr session);
 
 DIR * get_dir(session_ptr session);
 
-void init_client_dir(session_ptr session);
+void init_user_dir(session_ptr session);
 
 int mark_to_delete(session_ptr session, int mail);
 
@@ -61,5 +61,7 @@ action_type peek_action(session_ptr session);
 int get_user_dir_idx(session_ptr session);
 
 void set_user_dir_idx(session_ptr session, int idx);
+
+int * get_dir_mails(session_ptr session);
 
 #endif

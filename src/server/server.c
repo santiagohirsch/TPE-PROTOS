@@ -20,7 +20,7 @@ static void handle_signal(int signal){
 
 void accept_passive_connection(struct selector_key *key);
     
-int main(int argc, char const *argv[]){
+int main(int argc, char *argv[]){
 
     // close stdin, stdout
     close(0);
@@ -31,7 +31,7 @@ int main(int argc, char const *argv[]){
     signal(SIGTERM, handle_signal);
 
     // setup server
-    server_t server = init_server("./mail", PORT);
+    server_t server = init_server("./mail", argc, argv);
     int server_sock = get_server_socket();
 
     // setup selector
