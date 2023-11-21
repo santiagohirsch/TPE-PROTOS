@@ -93,4 +93,6 @@ parser_feed     (struct parser *p, const uint8_t c);
 const unsigned *
 parser_no_classes(void);
 
+struct parser_event * get_parser_event(struct parser * p);
+
 #endif

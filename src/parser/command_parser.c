@@ -87,3 +87,17 @@ struct parser_event * get_command(struct parser_event * event, struct parser * p
 void command_parser_destroy(struct parser * p) {
     parser_destroy(p);
 }
+
+void command_parser_reset(struct parser * p){
+    parser_reset(p);
+    struct parser_event * event = get_parser_event(p);
+    event->type = MAYEQ;
+    event->idx = 0;
+    event->command_len = 0;
+    event->arg1_len = 0;
+    event->arg2_len = 0;
+}
+
+struct parser_event * get_command_parser_event(struct parser * p){
+    return get_parser_event(p);
+}

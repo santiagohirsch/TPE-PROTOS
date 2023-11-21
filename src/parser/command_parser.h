@@ -32,4 +32,8 @@ struct parser_event * get_command(struct parser_event * event, struct parser * p
 
 void command_parser_destroy(struct parser * p);
 
+void command_parser_reset(struct parser * p);
+
+struct parser_event * get_command_parser_event(struct parser * p);
+
 #endif

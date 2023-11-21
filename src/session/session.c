@@ -31,8 +31,7 @@ session_ptr new_session(int socket) {
     session->stm = state_machine_init();
     memset(session->username, 0, USERNAME_MAX_LEN);
     session->parser = command_parser_init();
-    session->event = malloc(sizeof(struct parser_event));
-    session->event->type = MAYEQ;
+    session->event = get_command_parser_event(session->parser);
     session->fd_handler = calloc(1, sizeof(struct fd_handler));
     session->fd_handler->handle_read = read_session;
     session->fd_handler->handle_write = send_session_response;
@@ -55,11 +54,7 @@ void read_session(struct selector_key * key) {
     session_ptr session = (session_ptr) key->data;
 
     if (session->event->type != MAYEQ) {
-        session->event->command_len = 0;
-        session->event->arg1_len = 0;
-        session->event->arg2_len = 0;
-        session->event = calloc(1, sizeof(struct parser_event));
-        parser_reset(session->parser);
+        command_parser_reset(session->parser);
     }
 
     if (session->event->type == MAYEQ) {
