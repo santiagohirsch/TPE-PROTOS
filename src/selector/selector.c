@@ -2,7 +2,6 @@
  * selector.c - un muliplexor de entrada salida
  */
 #include <stdio.h>  // perror
-#include <stdlib.h> // malloc
 #include <string.h> // memset
 #include <assert.h> // :)
 #include <errno.h>  // :)
