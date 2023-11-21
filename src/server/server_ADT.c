@@ -98,6 +98,7 @@ static void free_users() {
     user_node * current = server->users;
     while(current != NULL) {
         user_node * next = current->next;
+        delete_user_session(current->session);
         free(current);
         current = next;
     }

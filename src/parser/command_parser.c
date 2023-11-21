@@ -83,3 +83,7 @@ struct parser_event * get_command(struct parser_event * event, struct parser * p
     *bytes_read = i;
     return event;
 }
+
+void command_parser_destroy(struct parser * p) {
+    parser_destroy(p);
+}

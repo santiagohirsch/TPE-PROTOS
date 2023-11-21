@@ -30,4 +30,6 @@ struct parser * command_parser_init();
 
 struct parser_event * get_command(struct parser_event * event, struct parser * p, char * buffer, size_t bytes, size_t * bytes_read);
 
+void command_parser_destroy(struct parser * p);
+
 #endif

@@ -41,7 +41,9 @@ session_ptr new_session(int socket) {
 }
 
 void delete_user_session(session_ptr session) {
-    free(session->username);
+    free_state_machine(session->stm);
+    command_parser_destroy(session->parser);
+    free(session->fd_handler);
     free(session);
 }
 
