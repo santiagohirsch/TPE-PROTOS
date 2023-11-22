@@ -40,7 +40,7 @@ fd_handler * get_udp_fd_handler() {
     return udp_server->fd_handler;
 }
 
-void set_fd_handler(void (*handle_read)(struct selector_key * key), void (*handle_write)(struct selector_key * key)) {
+void set_udp_fd_handler(void (*handle_read)(struct selector_key * key), void (*handle_write)(struct selector_key * key)) {
     udp_server->fd_handler->handle_read = handle_read;
     udp_server->fd_handler->handle_write = handle_write;
 }

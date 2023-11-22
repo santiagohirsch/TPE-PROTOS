@@ -13,6 +13,6 @@ int validate_credentials(const char * username, const char * password);
 
 fd_handler * get_udp_fd_handler();
 
-void set_fd_handler(void (*handle_read)(struct selector_key * key), void (*handle_write)(struct selector_key * key));
+void set_udp_fd_handler(void (*handle_read)(struct selector_key * key), void (*handle_write)(struct selector_key * key));
 
 #endif
