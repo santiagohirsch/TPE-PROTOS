@@ -29,4 +29,6 @@ void set_fd_handler(void (*handle_read)(struct selector_key * key), void (*handl
 
 int add_user(session_ptr session);
 
+int remove_user(session_ptr session);
+
 #endif

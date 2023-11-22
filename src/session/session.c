@@ -8,8 +8,9 @@
 #include "../buffer/buffer.h"
 #include "../server/server_utils.h"
 #include "../utils/stack_ADT.h"
+//#include "../server/server_ADT.h"
 
-struct user_dir {
+struct user_mail_dir {
     DIR * dir_ptr;
     int * mails;
     int mails_count;
@@ -26,12 +27,11 @@ typedef struct user_session {
     char username[USERNAME_MAX_LEN];
     struct parser * parser;
     struct parser_event * event;
-    struct user_dir * dir;
+    struct user_mail_dir * dir;
     struct fd_handler * fd_handler;
     int write_bytes;
     stack_adt actions;
 } user_session;
-
 
 
 session_ptr new_session(int socket) {
@@ -44,19 +44,21 @@ session_ptr new_session(int socket) {
     session->fd_handler = calloc(1, sizeof(struct fd_handler));
     session->fd_handler->handle_read = read_session;
     session->fd_handler->handle_write = send_session_response;
+    session->fd_handler->handle_close = close_session;
     session->write_bytes = 0;
     session->actions = new_stack();
     push_action(session, READ);
     push_action(session, PROCESSING);
     buffer_init(&session->read_buffer, BUFFER_SIZE, (uint8_t *)session->read_buffer_data);
     buffer_init(&session->write_buffer, BUFFER_SIZE, (uint8_t *)session->write_buffer_data);
-    session->dir = calloc(1, sizeof(struct user_dir));
+    session->dir = calloc(1, sizeof(struct user_mail_dir));
     session->dir->dir_index = 1;
     return session;
 }
 
 void delete_user_session(session_ptr session) {
     close(session->socket);
+    remove_user(session);
     free_state_machine(session->stm);
     command_parser_destroy(session->parser);
     delete_stack(session->actions);
@@ -143,6 +145,15 @@ void send_session_response(struct selector_key * key) {
         selector_set_interest_key(key, OP_READ);
         return;
     }
+    if (get_session_state(session) == EXIT) {
+        selector_unregister_fd(key->s, key->fd);
+        return;
+    }
+}
+
+void close_session(struct selector_key * key) {
+    if (key->data != NULL)
+        delete_user_session(key->data);
 }
 
 int continue_session(session_ptr session) {

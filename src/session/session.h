@@ -32,6 +32,8 @@ void send_session_response(struct selector_key * key);
 
 void read_session(struct selector_key * key);
 
+void close_session(struct selector_key * key);
+
 int continue_session(session_ptr session);
 
 int get_username(session_ptr session, char * username);

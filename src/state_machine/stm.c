@@ -42,7 +42,13 @@ int auth(state_machine_ptr stm, session_ptr session, char *buffer, int bytes) {
             strncpy(buffer, "-ERR [AUTH] Authentication failed\n", len);
         }
         
-    } else {
+    } else if (strncmp(event->command, "QUIT", bytes) == 0) {
+        len = strlen("+OK POP3 server signing off\n");
+        strncpy(buffer, "+OK POP3 server signing off\n", len);
+        stm->state = EXIT;
+    }
+    
+    else {
         pop_action(session);
         len = strlen("-ERR Unknown command\n");
         strncpy(buffer, "-ERR Unknown command\n", len);
