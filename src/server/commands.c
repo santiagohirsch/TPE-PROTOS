@@ -26,7 +26,7 @@ int pass_cmd(session_ptr session, char *arg, int arg_len, char *response, bool *
     int len = 0;
     char username[USERNAME_MAX_LEN] = {0};
     int username_len = get_username(session, username);
-
+   
     if (username_len <= 0) {
         len = strlen("-ERR [AUTH] Authentication failed\r\n");
         strncpy(response, "-ERR [AUTH] Authentication failed\r\n", len);
@@ -59,8 +59,6 @@ int pass_cmd(session_ptr session, char *arg, int arg_len, char *response, bool *
     set_dir(session, dir_ptr);
 
     *is_authenticated = true;
-
-    closedir(dir_ptr);
 
     return len;
 }
@@ -199,7 +197,7 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
     if (len > 1) {
         msg_num = strtol(arg, NULL, 10);
         rewinddir(dir);
-        entry = read_files(dir, msg_num - 1);
+        entry = read_files(dir, msg_num);
 
         if (entry == NULL || msg_num < 1) {
             return sprintf(response, "-ERR There's no message %ld.\r\n", msg_num);

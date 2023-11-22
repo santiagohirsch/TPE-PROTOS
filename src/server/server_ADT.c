@@ -91,7 +91,7 @@ static int handle_user_option(int argc, char * argv[]) {
         fprintf(stderr, "password too long\n");
         return -1;
     }
-    strncpy(server->users_dirs[idx]->pass, password, strlen(password));
+    strcpy(server->users_dirs[idx]->pass, password);
     users_registered++;
     return 1;
 }

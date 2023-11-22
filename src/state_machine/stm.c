@@ -27,6 +27,8 @@ int auth(state_machine_ptr stm, session_ptr session, char *buffer, int bytes) {
     struct parser_event *event = get_event(session);
     if (strncmp(event->command, "USER", bytes) == 0) {
         user_cmd(session, event->arg1, event->arg1_len, buffer);
+        len = strlen("+OK\n");
+        strncpy(buffer, "+OK\n", len);
     } else if (strncmp(event->command, "PASS", bytes) == 0) {
         bool is_authenticated = false;
         pass_cmd(session, event->arg1, event->arg1_len, buffer, &is_authenticated);

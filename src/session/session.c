@@ -56,9 +56,13 @@ session_ptr new_session(int socket) {
 }
 
 void delete_user_session(session_ptr session) {
+    close(session->socket);
     free_state_machine(session->stm);
     command_parser_destroy(session->parser);
     delete_stack(session->actions);
+    closedir(session->dir->dir_ptr);
+    free(session->dir->mails);
+    free(session->dir);
     free(session->fd_handler);
     free(session);
 }
@@ -151,11 +155,12 @@ int continue_session(session_ptr session) {
 }
 
 int get_username(session_ptr session, char * username) {
-    if (strlen(session->username) == 0) {
+    int len = strlen(session->username);
+    if (len == 0) {
         return -1;
     }
-    strncpy(username, session->username, strlen(session->username));
-    return 0;
+    strncpy(username, session->username, len);
+    return len;
 }
 
 void set_username(session_ptr session, char * username, size_t len) {
