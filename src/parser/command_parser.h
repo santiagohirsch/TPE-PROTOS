@@ -15,7 +15,6 @@ enum command_states {
     COMMAND,
     ARG1,
     ARG2,
-    FINISHING,
     FINISHED
 };
 

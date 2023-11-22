@@ -33,42 +33,34 @@ static void next_arg(struct parser_event *ret, const uint8_t c) {
     ret->idx                  = 0;
 }
 
-static void finishing(struct parser_event *ret, const uint8_t c) {
-    ret->type                 = MAYEQ;
+static void finish(struct parser_event *ret, const uint8_t c) {
+    ret->type                 = EQ;
     ret->idx                  = 0;
     ret->command_len++;
     ret->arg1_len++;
     ret->arg2_len++;
 }
 
-static void finished(struct parser_event *ret, const uint8_t c) {
-    ret->type                 = EQ;
-}
-
 static const struct parser_state_transition ST_COMMAND[] =  {
-    {.when = '\r',    .dest = FINISHING, .action = finishing},
+    {.when = '\n',    .dest = FINISHED, .action = finish},
     {.when = ' ',     .dest = ARG1,     .action = next_arg},
     {.when = ANY,     .dest = COMMAND,  .action = copy_command},
 };
 
 static const struct parser_state_transition ST_ARG1[] =  {
-    {.when = '\r',    .dest = FINISHING, .action = finishing},
+    {.when = '\n',    .dest = FINISHED, .action = finish},
     {.when = ' ',     .dest = ARG2,     .action = next_arg},
     {.when = ANY,     .dest = ARG1,     .action = copy_arg1},
 };
 
 static const struct parser_state_transition ST_ARG2[] =  {
-    {.when = '\r',    .dest = FINISHING, .action = finishing},
+    {.when = '\n',    .dest = FINISHED, .action = finish},
     {.when = ANY,     .dest = ARG2,     .action = copy_arg2},
 };
 
-static const struct parser_state_transition ST_FINISHING[] =  {
-    {.when = '\n',    .dest = FINISHED, .action = finished},
-};  
+static const struct parser_state_transition *states[] = {ST_COMMAND, ST_ARG1, ST_ARG2};
 
-static const struct parser_state_transition *states[] = {ST_COMMAND, ST_ARG1, ST_ARG2, ST_FINISHING};
-
-static const size_t states_n[] = {N(ST_COMMAND), N(ST_ARG1), N(ST_ARG2), N(ST_FINISHING)};
+static const size_t states_n[] = {N(ST_COMMAND), N(ST_ARG1), N(ST_ARG2)};
 
 static const struct parser_definition command_parser_definition = {
     .states_count = N(states),
