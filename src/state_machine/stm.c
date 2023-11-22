@@ -16,9 +16,10 @@ typedef int (*state_handler)(state_machine_ptr stm, session_ptr session, char *b
 
 int start(state_machine_ptr stm, session_ptr session, char *buffer, int bytes) {
     pop_action(session);
-    printf("+OK POP3 server READY\n");
+    int len = strlen("+OK POP3 server READY\n");
+    strncpy(buffer, "+OK POP3 server READY\n", len);
     stm->state = AUTHENTICATION;
-    return 0;
+    return len;
 }
 
 int auth(state_machine_ptr stm, session_ptr session, char *buffer, int bytes) {
@@ -26,27 +27,23 @@ int auth(state_machine_ptr stm, session_ptr session, char *buffer, int bytes) {
     struct parser_event *event = get_event(session);
     if (strncmp(event->command, "USER", bytes) == 0) {
         user_cmd(session, event->arg1, event->arg1_len, buffer);
-        stm->state = AUTHENTICATION;
     } else if (strncmp(event->command, "PASS", bytes) == 0) {
         bool is_authenticated = false;
         pass_cmd(session, event->arg1, event->arg1_len, buffer, &is_authenticated);
         if (is_authenticated) {
             len = strlen("+OK Logged in.\n");
             strncpy(buffer, "+OK Logged in.\n", len);
+            init_user_dir(session);
             stm->state = TRANSACTION;
         } else {
             len = strlen("-ERR [AUTH] Authentication failed\n");
             strncpy(buffer, "-ERR [AUTH] Authentication failed\n", len);
-            stm->state = AUTHENTICATION;
         }
-        stm->state = TRANSACTION;
-        init_user_dir(session);
-    }
-    else {
+        
+    } else {
         pop_action(session);
         len = strlen("-ERR Unknown command\n");
         strncpy(buffer, "-ERR Unknown command\n", len);
-        stm->state = AUTHENTICATION;
     }
     return len;
 }

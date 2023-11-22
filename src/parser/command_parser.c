@@ -42,20 +42,20 @@ static void finish(struct parser_event *ret, const uint8_t c) {
 }
 
 static const struct parser_state_transition ST_COMMAND[] =  {
-    {.when = ANY,     .dest = COMMAND,  .action = copy_command},
     {.when = '\n',    .dest = FINISHED, .action = finish},
     {.when = ' ',     .dest = ARG1,     .action = next_arg},
+    {.when = ANY,     .dest = COMMAND,  .action = copy_command},
 };
 
 static const struct parser_state_transition ST_ARG1[] =  {
-    {.when = ANY,     .dest = ARG1,     .action = copy_arg1},
     {.when = '\n',    .dest = FINISHED, .action = finish},
     {.when = ' ',     .dest = ARG2,     .action = next_arg},
+    {.when = ANY,     .dest = ARG1,     .action = copy_arg1},
 };
 
 static const struct parser_state_transition ST_ARG2[] =  {
-    {.when = ANY,     .dest = ARG2,     .action = copy_arg2},
     {.when = '\n',    .dest = FINISHED, .action = finish},
+    {.when = ANY,     .dest = ARG2,     .action = copy_arg2},
 };
 
 static const struct parser_state_transition *states[] = {ST_COMMAND, ST_ARG1, ST_ARG2};
@@ -75,7 +75,6 @@ struct parser * command_parser_init() {
 
 struct parser_event * get_command(struct parser_event * event, struct parser * p, char * buffer, size_t bytes, size_t * bytes_read) {
     int i;
-
     for(i = 0; i < bytes && event->type == MAYEQ; i++) {
         event = parser_feed(p, buffer[i]);
     }
@@ -85,7 +84,9 @@ struct parser_event * get_command(struct parser_event * event, struct parser * p
 }
 
 void command_parser_destroy(struct parser * p) {
-    parser_destroy(p);
+    if (p != NULL) {
+        parser_destroy(p);
+    }
 }
 
 void command_parser_reset(struct parser * p){

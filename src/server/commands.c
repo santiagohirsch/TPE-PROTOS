@@ -24,7 +24,7 @@ int pass_cmd(session_ptr session, char *arg, int arg_len, char *response, bool *
     pop_action(session);
 
     int len = 0;
-    char *username = malloc(USERNAME_MAX_LEN);
+    char username[USERNAME_MAX_LEN] = {0};
     int username_len = get_username(session, username);
 
     if (username_len <= 0) {
@@ -51,8 +51,9 @@ int pass_cmd(session_ptr session, char *arg, int arg_len, char *response, bool *
 
     strcat(dir, "/");
 
-    strcat(dir, username);
+    strncat(dir, username, username_len);
 
+    // TODO: chequeo de error
     DIR *dir_ptr = opendir(dir);
 
     set_dir(session, dir_ptr);
@@ -126,14 +127,15 @@ int stat_cmd(session_ptr session, char * arg, int len, char * response) {
    int i = 0;
    while((entry = readdir(dir)) != NULL) {
        if(entry->d_type == DT_REG) {
-           if(!user_mails[i]) {
-            file_count++;
-           bytes += get_file_size(mail_dir, entry->d_name);}
+            if(!user_mails[i]) {
+                file_count++;
+                bytes += get_file_size(mail_dir, entry->d_name);
+            }
        }
        i++;
    }
 
-//    get_file_stats(dir, mail_dir, &file_count, &bytes);
+   get_file_stats(dir, mail_dir, &file_count, &bytes);
 
    sprintf(response, "+OK %d %d\n", file_count, bytes);
 
@@ -164,11 +166,11 @@ static struct dirent * read_files(DIR * dir, long msg_num) {
     struct dirent * entry = readdir(dir);
     int i = 0;
     while(i < msg_num && entry != NULL) {
-        entry = readdir(dir);
+        
         if(entry->d_type == DT_REG) {
             i++;
         }
-    
+        entry = readdir(dir);
     }
     return entry;
 }
@@ -179,12 +181,9 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
     action_type action = pop_action(session);
 
     DIR * dir = get_dir(session);
-    long msg_num = 0;
-    if (arg != NULL) {
-        msg_num = strtol(arg, NULL, 10);
-    }
+    long msg_num;
 
-    struct dirent * entry = read_files(dir, msg_num);
+    struct dirent * entry;
 
     char username[USERNAME_MAX_LEN] = {0};
     char path[256] = {0};
@@ -215,7 +214,7 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
     int current_line_len = 0;
     char aux[256] = {0};
 
-    // TODO: use real values
+
     if (action == PROCESS) {
         rewinddir(dir);
         int count = 0;
@@ -232,7 +231,7 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
 
     int idx = get_user_dir_idx(session);
     entry = readdir(dir);
-    long location = 0;
+    long location = telldir(dir);
 
     while (response_len + current_line_len < bytes && entry != NULL) {
         if (entry->d_type == DT_REG) {
@@ -245,8 +244,9 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
                 strncat(response, aux, current_line_len);
                 idx++;
             }
+            location = telldir(dir);
         }
-        location = telldir(dir);
+        
         entry = readdir(dir);
     }
 

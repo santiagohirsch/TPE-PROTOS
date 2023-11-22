@@ -81,7 +81,7 @@ int setup_server(int port) {
 
     w_bind(server, (struct sockaddr *) &sock_address, sizeof(sock_address));
 
-    w_listen(server, 50);
+    w_listen(server, 20);
 
     return 0;
 }

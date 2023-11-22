@@ -5,13 +5,17 @@
 
 typedef struct stack_cdt * stack_adt;
 
+typedef struct {
+    action_type elem;
+} data_t;
+
 stack_adt new_stack(void);
 
-void push(stack_adt stack, action_type elem);
+void push(stack_adt stack, data_t elem);
 
-int pop(stack_adt stack, action_type * elem);
+int pop(stack_adt stack, data_t * elem);
 
-int peek(stack_adt stack, action_type * elem);
+int peek(stack_adt stack, data_t * elem);
 
 void delete_stack(stack_adt stack);
 

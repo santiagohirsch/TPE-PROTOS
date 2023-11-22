@@ -8,7 +8,7 @@
 #include <stdbool.h>
 
 #define BLOCK 5
-#define PORT 110
+#define PORT 1110
 
 typedef struct user_node {
     session_ptr session;
@@ -21,6 +21,7 @@ struct server {
     char * root_dir;
     struct user_dir ** users_dirs;
     user_node * users;
+    int user_session_count;
     struct fd_handler * fd_handler;
 };
 
@@ -42,7 +43,7 @@ static struct user_dir ** init_users_dirs(char * root_dir, int * user_count) {
     while((entry = readdir(dir)) != NULL) {
         if(entry->d_type == DT_DIR) {
             if(strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-                if (count > 0 && (count % BLOCK == 0)) {
+                if (count > 0 && ((count % BLOCK) == 0)) {
                     users = realloc(users, sizeof(struct user_dir *) * (count + BLOCK));
                     memset(users + count, 0, sizeof(struct user_dir *) * BLOCK);
                 }
@@ -128,8 +129,8 @@ struct server * init_server(char * root_dir, int argc, char * argv[]) {
     }
 
     server->users = NULL;
-    server->user_count = 0;
-    server->fd_handler = malloc(sizeof(struct fd_handler));
+    server->user_session_count = 0;
+    server->fd_handler = malloc(sizeof(fd_handler));
     return server;
 }
 
@@ -194,7 +195,7 @@ int add_user(session_ptr session) {
         current->session = session;
         current->next = NULL;
         server->users = current;
-        server->user_count++;
+        server->user_session_count++;
         return 0;
     }
     while(current->next != NULL) {
@@ -203,6 +204,6 @@ int add_user(session_ptr session) {
     current->next = malloc(sizeof(user_node));
     current->next->session = session;
     current->next->next = NULL;
-    server->user_count++;
+    server->user_session_count++;
     return 0;
 }

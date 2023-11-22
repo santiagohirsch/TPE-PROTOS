@@ -37,8 +37,6 @@ typedef struct user_session {
 session_ptr new_session(int socket) {
     session_ptr session = malloc(sizeof(user_session));
     session->socket = socket;
-    buffer_init(&session->read_buffer, BUFFER_SIZE, (uint8_t *)session->read_buffer_data);
-    buffer_init(&session->write_buffer, BUFFER_SIZE, (uint8_t *)session->write_buffer_data);
     session->stm = state_machine_init();
     memset(session->username, 0, USERNAME_MAX_LEN);
     session->parser = command_parser_init();
@@ -48,8 +46,10 @@ session_ptr new_session(int socket) {
     session->fd_handler->handle_write = send_session_response;
     session->write_bytes = 0;
     session->actions = new_stack();
-    push_action(session, READING);
+    push_action(session, READ);
     push_action(session, PROCESSING);
+    buffer_init(&session->read_buffer, BUFFER_SIZE, (uint8_t *)session->read_buffer_data);
+    buffer_init(&session->write_buffer, BUFFER_SIZE, (uint8_t *)session->write_buffer_data);
     session->dir = calloc(1, sizeof(struct user_dir));
     session->dir->dir_index = 1;
     return session;
@@ -101,17 +101,8 @@ void read_session(struct selector_key * key) {
     }
 }
 
-int write_session_response(session_ptr session, char * response, size_t len) {
-    size_t wbytes = 0;
-    char * wbuffer = (char *) buffer_write_ptr(&session->write_buffer, &wbytes);
-    int bytes_to_write = len <= wbytes ? len : wbytes;
-    strncpy(wbuffer, response, bytes_to_write);
-    buffer_write_adv(&session->write_buffer, bytes_to_write);
-    return bytes_to_write;
-}
-
 void send_session_response(struct selector_key * key) {
-    session_ptr session = (session_ptr) key->data;
+    session_ptr session = key->data;
 
     action_type current_action = peek_action(session);
 
@@ -231,19 +222,21 @@ fd_handler * get_session_fd_handler(session_ptr session) {
 }
 
 action_type pop_action(session_ptr session) {
-    action_type action;
+    data_t action;
     int ret = pop(session->actions, &action);
-    return ret == -1 ? ret : action;
+    return ret == -1 ? ret : action.elem;
 }
 
 void push_action(session_ptr session, action_type action) {
-    push(session->actions, action);
+    data_t data;
+    data.elem = action;
+    push(session->actions, data);
 }
 
 action_type peek_action(session_ptr session) {
-    action_type action;
+    data_t action;
     int ret = peek(session->actions, &action);
-    return ret == -1 ? ret : action;
+    return ret == -1 ? ret : action.elem;
 }
 
 int get_user_dir_idx(session_ptr session) {

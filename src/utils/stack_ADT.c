@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 typedef struct node {
-    action_type elem;
+    data_t elem;
     struct node * next;
 } node;
 
@@ -19,7 +19,7 @@ stack_adt new_stack() {
 }
 
 // TODO: add wrapper functions for malloc
-void push(stack_adt stack, action_type elem) {
+void push(stack_adt stack, data_t elem) {
     node * new_node = malloc(sizeof(node));
     // CHECK MALLOC
     new_node->elem = elem;
@@ -27,23 +27,21 @@ void push(stack_adt stack, action_type elem) {
     stack->first = new_node;
 }
 
-int pop(stack_adt stack, action_type * elem) {
+int pop(stack_adt stack, data_t * elem) {
     node * first = stack->first;
     if (first == NULL) {
         return -1;
     }
     *elem = first->elem;
     stack->first = first->next;
-    free(first);
     return 0;
 }
 
-int peek(stack_adt stack, action_type * elem) {
-    node * first = stack->first;
-    if (first == NULL) {
+int peek(stack_adt stack, data_t * elem) {
+    if (stack->first == NULL) {
         return -1;
     }
-    *elem = first->elem;
+    *elem = stack->first->elem;
     return 0;
 }
 
