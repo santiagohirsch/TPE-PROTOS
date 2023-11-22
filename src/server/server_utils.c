@@ -95,3 +95,17 @@ int accept_connection(int server_sock){
 
     return client;
 }
+
+int setup_udp_ipv4(int port) {
+    struct sockaddr_in sock_address;
+    memset(&sock_address, 0, sizeof(sock_address));
+    sock_address.sin_family = AF_INET;
+    sock_address.sin_addr.s_addr = htonl(INADDR_ANY);
+    sock_address.sin_port = htons(port);
+
+    int udp_socket = w_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+    w_bind(udp_socket, (struct sockaddr *) &sock_address, sizeof(sock_address));
+
+    return udp_socket;
+}
