@@ -13,7 +13,7 @@ struct user_dir {
 };
 
 
-server_t init_server(char * root_dir, int argc, char * argv[]);
+server_t init_server(int argc, char * argv[]);
 
 struct user_dir * get_user_dir(char * username, int len);
 

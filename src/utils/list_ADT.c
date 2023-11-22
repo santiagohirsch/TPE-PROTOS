@@ -1,4 +1,5 @@
 #include "list_ADT.h"
+#include <stdlib.h>
 
 typedef struct node {
     elem_t elem;

@@ -32,7 +32,7 @@ int main(int argc, char *argv[]){
     signal(SIGTERM, handle_signal);
 
     // setup server
-    server_t server = init_server("./mail", argc, argv);
+    server_t server = init_server(argc, argv);
     int server_sock = get_server_socket();
 
     set_fd_handler(&accept_passive_connection, NULL);
