@@ -66,4 +66,6 @@ void set_user_dir_idx(session_ptr session, int idx);
 
 int * get_dir_mails(session_ptr session);
 
+int get_dir_mails_count(session_ptr session);
+
 #endif

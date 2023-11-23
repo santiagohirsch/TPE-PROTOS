@@ -233,6 +233,10 @@ int * get_dir_mails(session_ptr session) {
     return session->dir->mails;
 }
 
+int get_dir_mails_count(session_ptr session) {
+    return session->dir->mails_count;
+}
+
 fd_handler * get_session_fd_handler(session_ptr session) {
     return session->fd_handler;
 }

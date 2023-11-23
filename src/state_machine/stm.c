@@ -61,8 +61,8 @@ int transaction(state_machine_ptr stm, session_ptr session, char *buffer, int by
     int len;
     struct parser_event *event = get_event(session);
     char response[256] = {0};
-    if (strncmp(event->command, "QUIT", bytes) == 0) {
-        pop_action(session);
+    if (strcmp(event->command, "QUIT") == 0) {
+        quit_cmd(session);
         len = strlen("+OK POP3 server signing off\n");
         strncpy(buffer, "+OK POP3 server signing off\n", len);
         stm->state = EXIT;
