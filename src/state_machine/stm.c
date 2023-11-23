@@ -47,6 +47,10 @@ int auth(state_machine_ptr stm, session_ptr session, char *buffer, int bytes) {
         len = strlen("+OK POP3 server signing off\n");
         strncpy(buffer, "+OK POP3 server signing off\n", len);
         stm->state = EXIT;
+    } else if (strncmp(event->command, "CAPA", bytes) == 0) {
+        pop_action(session);
+        len = strlen("+OK\r\nCAPA\r\nUSER\r\nPIPELINING\r\n.\r\n");
+        strncpy(buffer, "+OK\r\nCAPA\r\nUSER\r\nPIPELINING\r\n.\r\n", len);
     }
     
     else {
@@ -99,6 +103,10 @@ int transaction(state_machine_ptr stm, session_ptr session, char *buffer, int by
         len = list_cmd(session, event->arg1, event->arg1_len, buffer, bytes);
     } else if (strncmp(event->command, "RETR", bytes) == 0) {
         len = retr_cmd(session, event->arg1, event->arg1_len, buffer, bytes);
+    } else if (strncmp(event->command, "CAPA", bytes) == 0) {
+        pop_action(session);
+        len = strlen("+OK\r\nCAPA\r\nPIPELINING\r\n.\r\n");
+        strncpy(buffer, "+OK\r\nCAPA\r\nPIPELINING\r\n.\r\n", len);
     } else {
         pop_action(session);
         char * response = calloc(256, sizeof(char));
