@@ -18,4 +18,6 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
 
 int quit_cmd(session_ptr session);
 
+int retr_cmd(session_ptr session, char * arg, int len, char * response, int bytes);
+
 #endif

@@ -8,4 +8,6 @@
 
 #define MAX_RESPONSE_LEN 512 // RFC 1939 
 
+#define BUFFER_SIZE (8 * 1024)
+
 #endif

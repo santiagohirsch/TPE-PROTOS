@@ -4,8 +4,13 @@
 #include "pop3_constants.h"
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <fcntl.h>
+#include <dirent.h>
+#include <unistd.h>
+
 
 int user_cmd(session_ptr session, char *arg, int arg_len, char *response) {
 
@@ -301,4 +306,98 @@ int quit_cmd (session_ptr session) {
     }
 
     return 0;
+}
+
+int retr_cmd(session_ptr session, char * arg, int len, char * response, int bytes) {
+    action_type action = pop_action(session);
+
+    if (len <= 1)
+    {
+        return sprintf(response, "-ERR Invalid command\r\n");
+    }
+    
+    long msg_num = strtol(arg, NULL, 10);
+    
+    DIR * dir = get_dir(session);
+    rewinddir(dir);
+
+    struct dirent * entry;
+
+    char username[USERNAME_MAX_LEN] = {0};
+    char path[MAX_MAIL_PATH_LEN] = {0};
+    int username_len = get_username(session, username);
+    strcpy(path, get_root_dir());
+    strcat(path, "/");
+    strncat(path, username, username_len);
+    strcat(path, "/");
+    int path_len = strlen(path);
+
+    entry = read_files(dir, msg_num);
+
+    if (entry == NULL || msg_num < 1) {
+        return sprintf(response, "-ERR There's no message %ld.\r\n", msg_num);
+    }
+
+    struct retr_state * mail_retr_state = get_retr_state(session);
+    int resp_idx = 0;
+
+    if (action == PROCESS) {
+        strcat(path, entry->d_name);
+        mail_retr_state->mail_fd = open(path, O_NONBLOCK);
+        if (mail_retr_state->mail_fd < 0) {
+            perror("open error");
+            exit(1); //TODO error handle
+        }
+        resp_idx = strlen("+OK\r\n");
+        strncpy(response, "+OK\r\n", resp_idx);
+        bytes -= resp_idx;
+    }
+
+    char mail[BUFFER_SIZE];
+    int read_bytes = 0;
+    byte_stuffing_state current_state = EMPTY;
+
+    while (resp_idx < bytes && (read_bytes = read(mail_retr_state->mail_fd, mail, BUFFER_SIZE-1)) > 0) {
+        int data_idx = 0;
+        mail[read_bytes] = '\0';
+
+        for (; data_idx < read_bytes; data_idx++) {
+            if (current_state == CR) {
+                if (mail[data_idx] == '\n') {
+                    current_state = LF;
+                } else {
+                    current_state = EMPTY;
+                }
+            } else if (current_state == LF) {
+                if (mail[data_idx] == '.') {
+                    response[resp_idx++] = '.';
+                }
+                current_state = EMPTY;
+                break;
+            } else {
+                if (mail[data_idx] == '\r') {
+                    current_state = CR;
+                }
+            }
+            response[resp_idx++] = mail[data_idx];
+        }
+
+        if (resp_idx == bytes) {
+            lseek(mail_retr_state->mail_fd, data_idx - read_bytes, SEEK_CUR);
+        }
+    }
+    
+    if (read_bytes == 0) {
+        int multi_retr_len = strlen("\r\n.\r\n");
+        if (resp_idx + multi_retr_len < bytes) {
+            strncpy(response + resp_idx, "\r\n.\r\n", multi_retr_len);
+            resp_idx += multi_retr_len;
+        }
+        close(mail_retr_state->mail_fd);
+    } else {
+        push_action(session, PROCESSING);
+    }
+
+    mail_retr_state->stuffed_byte = current_state;
+    return resp_idx;
 }

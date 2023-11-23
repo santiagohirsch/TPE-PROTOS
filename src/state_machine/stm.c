@@ -97,6 +97,8 @@ int transaction(state_machine_ptr stm, session_ptr session, char *buffer, int by
         strncpy(buffer, "+OK\r\n", len);
     } else if (strncmp(event->command, "LIST", bytes) == 0) {
         len = list_cmd(session, event->arg1, event->arg1_len, buffer, bytes);
+    } else if (strncmp(event->command, "RETR", bytes) == 0) {
+        len = retr_cmd(session, event->arg1, event->arg1_len, buffer, bytes);
     } else {
         pop_action(session);
         char * response = calloc(256, sizeof(char));

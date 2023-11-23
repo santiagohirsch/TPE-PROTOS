@@ -1,12 +1,12 @@
 #ifndef _SESSION_H_
 #define _SESSION_H_
 
-#define BUFFER_SIZE 1024
 #define USERNAME_MAX_LEN 40
 
 #include <stdbool.h>
 #include "../parser/command_parser.h"
 #include <dirent.h>
+#include "../server/pop3_constants.h"
 
 typedef struct user_session *session_ptr;
 
@@ -18,6 +18,18 @@ typedef enum action_type {
     WRITE,
     WRITING
 } action_type;
+
+typedef enum byte_stuffing_state {
+    CR = 0,
+    LF,
+    DOT,
+    EMPTY
+} byte_stuffing_state;
+
+struct retr_state {
+    int mail_fd;
+    byte_stuffing_state stuffed_byte;
+};
 
 #include "../state_machine/stm.h"
 #include "../selector/selector.h"
@@ -63,6 +75,8 @@ action_type peek_action(session_ptr session);
 int get_user_dir_idx(session_ptr session);
 
 void set_user_dir_idx(session_ptr session, int idx);
+
+struct retr_state * get_retr_state(session_ptr session);
 
 int * get_dir_mails(session_ptr session);
 

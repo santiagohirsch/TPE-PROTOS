@@ -31,6 +31,7 @@ typedef struct user_session {
     struct fd_handler * fd_handler;
     int write_bytes;
     stack_adt actions;
+    struct retr_state * retr_state;
 } user_session;
 
 
@@ -53,6 +54,7 @@ session_ptr new_session(int socket) {
     buffer_init(&session->write_buffer, BUFFER_SIZE, (uint8_t *)session->write_buffer_data);
     session->dir = calloc(1, sizeof(struct user_mail_dir));
     session->dir->dir_index = 1;
+    session->retr_state = calloc(1, sizeof(struct retr_state));
     return session;
 }
 
@@ -66,6 +68,7 @@ void delete_user_session(session_ptr session) {
     free(session->dir->mails);
     free(session->dir);
     free(session->fd_handler);
+    free(session->retr_state);
     free(session);
 }
 
@@ -86,6 +89,10 @@ void read_session(struct selector_key * key) {
         size_t wbytes = 0;
         char * wbuffer = (char *) buffer_write_ptr(&session->read_buffer, &wbytes);
         int bytes_received = w_recv(session->socket, wbuffer, wbytes, 0);
+        if (bytes_received <= 0) {
+            selector_unregister_fd(key->s, key->fd);
+            return;
+        }
         buffer_write_adv(&session->read_buffer, bytes_received);
     }
 
@@ -125,6 +132,10 @@ void send_session_response(struct selector_key * key) {
         size_t rbytes = 0;
         char * rbuffer = (char *) buffer_read_ptr(&session->write_buffer, &rbytes);
         int bytes_sent = w_send(session->socket, rbuffer, rbytes, 0);
+        if (bytes_sent == -1) {
+            selector_unregister_fd(key->s, key->fd);
+            return;
+        }
         buffer_read_adv(&session->write_buffer, bytes_sent);
         session->write_bytes -= bytes_sent;
     }
@@ -265,4 +276,8 @@ int get_user_dir_idx(session_ptr session) {
 
 void set_user_dir_idx(session_ptr session, int idx) {
     session->dir->dir_index = idx;
+}
+
+struct retr_state * get_retr_state(session_ptr session) {
+    return session->retr_state;
 }
