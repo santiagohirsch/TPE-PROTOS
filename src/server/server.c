@@ -7,6 +7,7 @@
 #include "server_ADT.h"
 #include "../session/session.h"
 #include "../selector/selector.h"
+#include "./udp/udp_ADT.h"
 
 #define MAX_CURRENT_CLIENTS 500
 
@@ -25,7 +26,7 @@ int main(int argc, char *argv[]){
 
     // close stdin, stdout
     close(0);
-    //close(1);
+    close(1);
 
     // handle signals
     signal(SIGINT, handle_signal);
@@ -38,6 +39,13 @@ int main(int argc, char *argv[]){
     set_fd_handler(&accept_passive_connection, NULL);
     struct fd_handler *server_handler = get_fd_handler();
 
+    // setup udp
+    udp_ADT udp_server = init_udp();
+    int udp_sock = get_udp_socket();
+    //set_udp_fd_handler(&handle_udp_read, &handle_udp_write);
+    set_udp_fd_handler(NULL, NULL);
+    struct fd_handler *udp_handler = get_udp_fd_handler();
+
     // setup selector
     struct selector_init conf = {
         .signal = SIGALRM,
@@ -48,6 +56,11 @@ int main(int argc, char *argv[]){
     };
 
     fd_selector fd_selector = new_fd_selector(server_sock, server_handler, &conf);
+
+    // register selectors
+    selector_register(fd_selector, udp_sock, udp_handler, OP_READ, NULL);
+    selector_register(fd_selector, server_sock, server_handler, OP_READ, NULL);
+
 
     // main loop
     while(!received_signal){
@@ -70,7 +83,7 @@ static fd_selector new_fd_selector(int socket, fd_handler *handler, struct selec
     }
 
     fd_selector fd_selector = selector_new(1024);
-    selector_register(fd_selector, socket, handler, OP_READ, NULL);
+
     return fd_selector;
 }
 
