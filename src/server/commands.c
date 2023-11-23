@@ -169,9 +169,9 @@ int rset_cmd(session_ptr session, char * arg, int len, char * response) {
 }
 
 static struct dirent * read_files(DIR * dir, long msg_num) {
-    struct dirent * entry = readdir(dir);
+    struct dirent * entry = readdir(dir);   // not ordered
     int i = 0;
-     while (entry != NULL) {
+    while (entry != NULL) {
         if (entry->d_type == DT_REG) {
             i++;
             if (i == msg_num) {
@@ -202,7 +202,7 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
     strncat(path, username, username_len);
     strcat(path, "/");
     int path_len = strlen(path);
-
+    int * user_mails = get_dir_mails(session);
     struct stat st;
 
     if (len > 1) {
@@ -210,8 +210,12 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
         rewinddir(dir);
         entry = read_files(dir, msg_num);
 
-        if (entry == NULL || msg_num < 1) {
+        if (msg_num < 1 || msg_num > get_dir_mails_count(session)) {
             return sprintf(response, "-ERR There's no message %ld.\r\n", msg_num);
+        } else if (entry == NULL) {
+            return sprintf(response, "-ERR There's no message %ld.\r\n", msg_num);
+        } else if (is_marked_to_delete(session, msg_num)) {
+            return sprintf(response, "-ERR Message is deleted.\r\n");
         }
 
         strcat(path, entry->d_name);
@@ -228,7 +232,7 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
         rewinddir(dir);
         int count = 0;
         int bytes = 0;
-        get_file_stats(dir, path, &count, &bytes, get_dir_mails(session));
+        get_file_stats(dir, path, &count, &bytes, user_mails);
         response_len = sprintf(aux, "+OK %d messages (%d octets)\r\n", count, bytes);
         strncpy(response, aux, response_len);
         response[response_len] = '\0';
@@ -248,20 +252,21 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
             stat(path, &st);
             if(!is_marked_to_delete(session,idx)) {
                 current_line_len = sprintf(aux, "%d %lld\r\n", idx, st.st_size);
-            }
-            if (response_len + current_line_len < bytes) {
-                response_len += current_line_len;
-                strncat(response, aux, current_line_len);
+                if (response_len + current_line_len < bytes) {
+                    response_len += current_line_len;
+                    strncat(response, aux, current_line_len);
+                    idx++;
+                    location = telldir(dir);
+                    entry = readdir(dir);
+                }
+            } else {
                 idx++;
                 location = telldir(dir);
                 entry = readdir(dir);
             }
-
         } else {
             entry = readdir(dir);
         }
-        
-        
     }
 
     if (entry != NULL) {
@@ -341,8 +346,12 @@ int retr_cmd(session_ptr session, char * arg, int len, char * response, int byte
 
     entry = read_files(dir, msg_num);
 
-    if (entry == NULL || msg_num < 1) {
+    if (msg_num < 1 || msg_num > get_dir_mails_count(session)) {
         return sprintf(response, "-ERR There's no message %ld.\r\n", msg_num);
+    } else if (entry == NULL) {
+        return sprintf(response, "-ERR There's no message %ld.\r\n", msg_num);
+    } else if (is_marked_to_delete(session, msg_num)) {
+        return sprintf(response, "-ERR Message is deleted.\r\n");
     }
 
     struct retr_state * mail_retr_state = get_retr_state(session);
