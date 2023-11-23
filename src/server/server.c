@@ -79,6 +79,7 @@ int main(int argc, char *argv[]){
     // main loop
     while(!received_signal){
         selector_select(fd_selector);
+        log_msg(LOG_INFO, "selector select active: iteration complete");
     }
 
     // cleanup
