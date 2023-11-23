@@ -1,5 +1,6 @@
 #include "udp_handler.h"
 #include "udp_request_parser.h"
+#include "udp_commands.h"
 #include <stdio.h>
 #include <netdb.h>
 #include <sys/types.h>
@@ -35,11 +36,20 @@ void udp_read(struct selector_key *key) {
     printf("arg1: %s\n", udp_request->arg1);
     printf("arg2: %s\n", udp_request->arg2);
 
-    free(udp_request);
+    udp_resp *udp_response = malloc(sizeof(udp_resp));
+
+    if (udp_response == NULL) {
+        perror("malloc"); // TODO: LOGGER
+        exit(1);
+    }
+
+    handle_request(udp_request, udp_response);
 
     char aux[MAX_BYTES_TO_READ];
-    int aux_bytes = snprintf(aux, MAX_BYTES_TO_READ, "respond to port %d\n", client_addr.sin_port);
+    int aux_bytes = snprintf(aux, MAX_BYTES_TO_READ, "protocol\r\nrequest_id: %d\r\nstatus_code: %d\r\nresponse: %s\r\n", udp_request->id, udp_response->code, udp_response->value);
 
     sendto(key->fd, aux, aux_bytes, 0, (struct sockaddr *) &client_addr, client_addr_len);
     
+    free(udp_request);
+    free(udp_response);
 }

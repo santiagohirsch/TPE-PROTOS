@@ -29,6 +29,10 @@ struct fd_handler * get_fd_handler();
 
 void set_fd_handler(void (*handle_read)(struct selector_key * key), void (*handle_write)(struct selector_key * key));
 
+unsigned long get_transferred_bytes_count();
+
+int get_user_session_count()
+
 int add_user(session_ptr session);
 
 int remove_user(session_ptr session);
