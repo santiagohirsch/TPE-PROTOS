@@ -7,7 +7,8 @@
 #define CREDENTIALS 2
 #define USERNAME 0
 #define PASSWORD 1
-#define ADMIN "admin"
+#define MAX_USER_LEN 32
+#define MAX_PASS_LEN 32
 
 struct udp {
     int socket;
@@ -21,8 +22,8 @@ udp_ADT init_udp() {
     if (udp_server == NULL) {
         udp_server = malloc(sizeof(struct udp));
         udp_server->socket = setup_udp_ipv4(UPD_PORT);
-        udp_server->credentials[USERNAME] = calloc(strlen(ADMIN) + 1, sizeof(char));
-        udp_server->credentials[PASSWORD] = calloc(strlen(ADMIN) + 1, sizeof(char));
+        udp_server->credentials[USERNAME] = calloc(MAX_USER_LEN, sizeof(char));
+        udp_server->credentials[PASSWORD] = calloc(MAX_PASS_LEN, sizeof(char));
         udp_server->fd_handler = malloc(sizeof(fd_handler));
     }
     return udp_server;

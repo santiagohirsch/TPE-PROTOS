@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
     char rp_buffer[1024];
 
     build_request(req, rq_buffer);
-    printf("Request: %s\n", rq_buffer);
+    printf("Request: \n%s\n", rq_buffer);
 
     int rq_buffer_len = strlen(rq_buffer);
     int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);

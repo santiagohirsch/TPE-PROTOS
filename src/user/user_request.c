@@ -164,8 +164,9 @@ struct request * get_request(int argc, char * argv[]) {
         exit(1);
     }
 
+
     bool found = false;
-    for (int i = 0; i < sizeof(options) / sizeof(struct option); i++) {
+    for (int i = 0; i < sizeof(options) / sizeof(struct option) && argc > 0; i++) {
         if (strcmp(argv[0], options[i].option) == 0) {
             found = true;
             int args = options[i].handler(req, argc - 1, argv + 1);
