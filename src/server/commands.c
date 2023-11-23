@@ -78,7 +78,6 @@ static ssize_t get_file_size(const char * mail, const char * file) {
         exit(1); //TODO error code
     }
     free(path);
-
     return st.st_size;
 }
 
@@ -96,13 +95,6 @@ static void get_file_stats(DIR * dir, const char * path, int * file_count, int *
 int stat_cmd(session_ptr session, char * arg, int len, char * response) {
    
    pop_action(session);
-   
-   DIR * dir = get_dir(session);
-
-   if(!dir) {
-        perror("opendir error");
-        exit(1); //TODO error code
-   }
 
    char username[USERNAME_MAX_LEN] = {0};
    int username_len = get_username(session, username);
@@ -116,6 +108,12 @@ int stat_cmd(session_ptr session, char * arg, int len, char * response) {
    strcat(mail_dir, "/");
    strncat(mail_dir, username, username_len);
 
+   DIR * dir = opendir(mail_dir);
+   if(!dir) {
+        perror("opendir error");
+        exit(1); //TODO error code
+   }
+
    int file_count = 0;
    int bytes = 0;
 
@@ -123,19 +121,19 @@ int stat_cmd(session_ptr session, char * arg, int len, char * response) {
 
    int * user_mails = get_dir_mails(session);
    int i = 0;
+
    while((entry = readdir(dir)) != NULL) {
        if(entry->d_type == DT_REG) {
-            if(!user_mails[i]) {
+            if(!user_mails[i++]) {
                 file_count++;
                 bytes += get_file_size(mail_dir, entry->d_name);
             }
        }
-       i++;
-   }
+    }
 
    get_file_stats(dir, mail_dir, &file_count, &bytes);
 
-   sprintf(response, "+OK %d %d\n", file_count, bytes);
+   sprintf(response, "%d %d", file_count, bytes);
 
    return strlen(response);
 }
@@ -146,7 +144,9 @@ int dele_cmd(session_ptr session, char * arg, int len, char * response) {
     
     int status = mark_to_delete(session, atoi(arg));
     if (status < 0) {
-        strcpy(response, "-ERR DELE: Maybe no such message\r\n");
+        char aux[256] = {0};
+        int aux_len = sprintf(aux, "-ERR There's no message %s\r\n", arg);
+        strncpy(response, aux, aux_len);
         return -1;
     }
     return 0;
@@ -218,9 +218,8 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
         int count = 0;
         int bytes = 0;
         get_file_stats(dir, path, &count, &bytes);
-        current_line_len = sprintf(aux, "+OK %d messages (%d octets)\r\n", count, bytes);
-        response_len += current_line_len;
-        strncpy(response, aux, current_line_len);
+        response_len = sprintf(aux, "+OK %d messages (%d octets)\r\n", count, bytes);
+        strncpy(response, aux, response_len);
         response[response_len] = '\0';
         rewinddir(dir);
         set_user_dir_idx(session, 1);
@@ -241,11 +240,15 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
                 response_len += current_line_len;
                 strncat(response, aux, current_line_len);
                 idx++;
+                location = telldir(dir);
+                entry = readdir(dir);
             }
-            location = telldir(dir);
+            
+        } else {
+            entry = readdir(dir);
         }
         
-        entry = readdir(dir);
+        
     }
 
     if (entry != NULL) {

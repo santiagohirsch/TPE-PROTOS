@@ -44,8 +44,9 @@ int auth(state_machine_ptr stm, session_ptr session, char *buffer, int bytes) {
         
     } else {
         pop_action(session);
-        len = strlen("-ERR Unknown command\n");
-        strncpy(buffer, "-ERR Unknown command\n", len);
+        char * response = calloc(256, sizeof(char));
+        len = sprintf(response, "-ERR Unknown command%s%s\r\n", strlen(event->command) > 0 ? ": " : ".", strlen(event->command) > 0 ? event->command : "");
+        strcpy(buffer, response);
     }
     return len;
 }
@@ -57,13 +58,13 @@ int transaction(state_machine_ptr stm, session_ptr session, char *buffer, int by
     char response[256] = {0};
     if (strncmp(event->command, "QUIT", bytes) == 0) {
         pop_action(session);
-        len = strlen("+OK POP3 server signing off\n");
-        strncpy(buffer, "+OK POP3 server signing off\n", len);
+        len = strlen("+OK POP3 server signing off\r\n");
+        strncpy(buffer, "+OK POP3 server signing off\r\n", len);
         stm->state = EXIT;
     }
     else if (strncmp(event->command, "STAT", bytes) == 0) {
-        len = strlen("+OK STAT") + 1;
-        strncpy(buffer, "+OK STAT", len);
+        len = strlen("+OK") + 1;
+        strncpy(buffer, "+OK", len);
         strcat(buffer, " ");
 
         len += stat_cmd(session, event->arg1, event->arg1_len, response);
@@ -77,22 +78,23 @@ int transaction(state_machine_ptr stm, session_ptr session, char *buffer, int by
             strncpy(buffer, response, len);
             return len;
         }
-        len = strlen("+OK DELE: message deleted\n");
-        strncpy(buffer, "+OK DELE: message deleted\n", len);
+        len = strlen("+OK Marked to be deleted.\r\n");
+        strncpy(buffer, "+OK Marked to be deleted.\r\n", len);
     } else if (strncmp(event->command,"NOOP", bytes) == 0) {
         pop_action(session);
-        len = strlen("+OK NOOP\r\n");
-        strncpy(buffer, "+OK NOOP\r\n", len);
+        len = strlen("+OK\r\n");
+        strncpy(buffer, "+OK\r\n", len);
     } else if (strncmp(event->command,"RSET",bytes) == 0) {
         rset_cmd(session, event->arg1, event->arg1_len, response);
-        len = strlen("+OK RSET\r\n");
-        strncpy(buffer, "+OK RSET\r\n", len);
+        len = strlen("+OK\r\n");
+        strncpy(buffer, "+OK\r\n", len);
     } else if (strncmp(event->command, "LIST", bytes) == 0) {
-        len = list_cmd(session, event->arg1, event->arg1_len, response, bytes);
+        len = list_cmd(session, event->arg1, event->arg1_len, buffer, bytes);
     } else {
         pop_action(session);
-        len = strlen("-ERR Unknown command\n");
-        strncpy(buffer, "-ERR Unknown command\n", len);
+        char * response = calloc(256, sizeof(char));
+        len = sprintf(response, "-ERR Unknown command%s%s\r\n", strlen(event->command) > 0 ? ": " : ".", strlen(event->command) > 0 ? event->command : "");
+        strcpy(buffer, response);
         stm->state = TRANSACTION;
     }
     return len;

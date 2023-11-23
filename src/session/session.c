@@ -206,7 +206,7 @@ static char is_marked_to_delete(session_ptr session, int mail) {
 }
 
 int mark_to_delete(session_ptr session, int mail) {
-    if( is_marked_to_delete(session, mail) || !((mail) > (0) && (mail) <= (session->dir->mails_count)) ) {
+    if(!((mail) > (0) && (mail) <= (session->dir->mails_count)) || is_marked_to_delete(session, mail)  ) {
         return -1;
     }
 
