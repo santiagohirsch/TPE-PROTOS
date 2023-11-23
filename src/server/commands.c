@@ -1,6 +1,6 @@
 #include "commands.h"
 #include "server_ADT.h"
-#include "../session/session.h"
+#include "./session/session.h"
 #include "pop3_constants.h"
 #include <string.h>
 #include <sys/stat.h>
@@ -330,7 +330,6 @@ int retr_cmd(session_ptr session, char * arg, int len, char * response, int byte
     strcat(path, "/");
     strncat(path, username, username_len);
     strcat(path, "/");
-    int path_len = strlen(path);
 
     entry = read_files(dir, msg_num);
 

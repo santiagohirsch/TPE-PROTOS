@@ -1,27 +1,13 @@
-include Makefile.inc
+all: server user
 
-# Source files
-SRC := $(shell find . -name "*.c")
+server:
+	cd src/server; make all
 
-# Object files
-
-OBJ := $(pathsubst $(SRC_DIR)/%.c, $(BIN_DIR)/%.o, $(SRC))
-
-# Binary output
-
-TARGET := $(BIN_DIR)/main
-
-# Default target
-
-all: $(TARGET)
-
-# Compile and link the source files
-
-$(TARGET): $(SRC)
-	@mkdir -p $(BIN_DIR)
-	$(CC) $(CFLAGS) $^ -o $@
-
-# Clean the object files and the binary
+user:
+	cd src/user; make all
 
 clean:
-	rm -rf $(BIN_DIR)
+	cd src/server; make clean 
+	cd src/user; make clean
+
+.PHONY: server user all clean

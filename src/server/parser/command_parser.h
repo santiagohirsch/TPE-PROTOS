@@ -9,7 +9,7 @@
  */
 #include "parser.h"
 #include <stdlib.h>
-#include "../server/server_utils.h"
+#include "../server_utils.h"
 
 enum command_states {
     COMMAND,

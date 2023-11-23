@@ -1,8 +1,8 @@
 #ifndef _SERVER_ADT_H_
 #define _SERVER_ADT_H_
 
-#include "../selector/selector.h"
-#include "../session/session.h"
+#include "./selector/selector.h"
+#include "./session/session.h"
 
 typedef struct server *server_t;
 

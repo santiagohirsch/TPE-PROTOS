@@ -2,9 +2,9 @@
 #include <string.h>
 #include <stdio.h>
 #include "stm.h"
-#include "../server/pop3_constants.h"
+#include "../pop3_constants.h"
 #include "../parser/command_parser.h"
-#include "../server/commands.h"
+#include "../commands.h"
 #include "../utils/stack_ADT.h"
 
 typedef struct state_machine {

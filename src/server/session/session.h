@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include "../parser/command_parser.h"
 #include <dirent.h>
-#include "../server/pop3_constants.h"
+#include "../pop3_constants.h"
 
 typedef struct user_session *session_ptr;
 

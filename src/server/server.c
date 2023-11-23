@@ -5,8 +5,8 @@
 #include <sys/wait.h>
 #include "server_utils.h"
 #include "server_ADT.h"
-#include "../session/session.h"
-#include "../selector/selector.h"
+#include "./session/session.h"
+#include "./selector/selector.h"
 #include <string.h>
 
 #define MAX_CURRENT_CLIENTS 500
@@ -33,7 +33,7 @@ int main(int argc, char *argv[]){
     signal(SIGTERM, handle_signal);
 
     // setup server
-    server_t server = init_server(argc, argv);
+    /*server_t server = */init_server(argc, argv);
     int server_ipv4_sock = get_server_ipv4_socket();
     int server_ipv6_sock = get_server_ipv6_socket();
 

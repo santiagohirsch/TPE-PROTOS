@@ -4,9 +4,9 @@
 #include <string.h>
 #include "server_utils.h"
 #include <unistd.h>
-#include "../state_machine/stm.h"
-#include "../parser/command_parser.h"
-#include "../session/session.h"
+#include "./state_machine/stm.h"
+#include "./parser/command_parser.h"
+#include "./session/session.h"
 
 
 //TODO: Agregar codigos de error al .h
