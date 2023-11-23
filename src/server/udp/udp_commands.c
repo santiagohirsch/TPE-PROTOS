@@ -9,24 +9,24 @@ typedef void (*udp_command)(char * arg1, char * arg2, udp_resp * resp);
 
 void udp_get_bytes(char * arg1, char * arg2, udp_resp * resp) {
     unsigned long package_bytes = get_transferred_bytes_count();
-    snprint(resp->value, 256, "%lu", package_bytes);
+    snprintf(resp->value, 256, "%lu", package_bytes);
 }
 
 void udp_get_current(char * arg1, char * arg2, udp_resp * resp) {
     int current_users = get_user_session_count();
-    snprint(resp->value, 256, "%d", current_clients);
+    snprintf(resp->value, 256, "%d", current_users);
 }
 
 void udp_get_history(char * arg1, char * arg2, udp_resp * resp) {
     int history = get_total_user_session_count();
-    snprint(resp->value, 256, "%d", history);
+    snprintf(resp->value, 256, "%d", history);
 }
 
-void udp_change_password(char *buffer) {
+void udp_change_password(char * arg1, char * arg2, udp_resp * resp) {
     ;
 }
 
-void udp_delete_user(char *buffer) {
+void udp_delete_user(char * arg1, char * arg2, udp_resp * resp) {
     ;
 }
 
@@ -36,11 +36,11 @@ typedef struct udp_command_elem {
 } udp_command_elem;
 
 udp_command_elem udp_commands[] = {
-    {"GET_BYTES",       &udp_get_bytes},
-    {"GET_CURRENT",     &udp_get_current},
-    {"GET_HISTORY",     &udp_get_history},
-    {"CHANGE_PASSWORD", &udp_change_password},
-    {"DELETE_USER",     &udp_delete_user},
+    {"GET_BYTES",       udp_get_bytes},
+    {"GET_CURRENT",     udp_get_current},
+    {"GET_HISTORY",     udp_get_history},
+    {"CHANGE_PASSWORD", udp_change_password},
+    {"DELETE_USER",     udp_delete_user},
     {NULL, NULL}
 };
 
@@ -59,14 +59,14 @@ void handle_request(udp_rqst * req, udp_resp * resp) {
     udp_command command = get_udp_command(req->command);
 
     if (command == NULL) {
-        resp->status = 1;
-        snprint(resp->value, 256, "Command not found");
+        resp->code = 1;
+        snprintf(resp->value, 256, "Command not found");
         return;
     }
 
-    resp->rqst_id = req->rqst_id;
+    resp->rqst_id = req->id;
     command(req->arg1, req->arg2, resp);
 
-    resp->status = OK;
+    resp->code = OK;
 }
 

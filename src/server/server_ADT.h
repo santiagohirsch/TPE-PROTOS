@@ -32,7 +32,7 @@ unsigned long get_transferred_bytes_count();
 
 void add_transferred_bytes_count(unsigned long bytes);
 
-unsigned int get_user_session_count()
+unsigned int get_user_session_count();
 
 unsigned int get_total_user_session_count();
 
