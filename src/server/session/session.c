@@ -101,6 +101,7 @@ void read_session(struct selector_key * key) {
     char * rbuffer = (char *) buffer_read_ptr(&session->read_buffer, &rbytes);
     session->event = get_command(session->event, session->parser, rbuffer, rbytes, &bytes_read);
     buffer_read_adv(&session->read_buffer, bytes_read);
+    add_transferred_bytes_count(bytes_read);
 
     if (session->event->type != MAYEQ) {
         if (buffer_can_read(&session->read_buffer)) {
@@ -138,6 +139,7 @@ void send_session_response(struct selector_key * key) {
         }
         buffer_read_adv(&session->write_buffer, bytes_sent);
         session->write_bytes -= bytes_sent;
+        add_transferred_bytes_count(bytes_sent);
     }
     if (session->write_bytes != 0) {
         if (current_action == WRITE) {

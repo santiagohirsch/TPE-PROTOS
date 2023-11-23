@@ -18,12 +18,17 @@ typedef struct user_node {
 struct server {
     int ipv4_socket;
     int ipv6_socket;
+
     int user_count;
-    char * root_dir;
     struct user_dir ** users_dirs;
+
+    char * root_dir;
+
     user_node * users;
-    int total_user_session_count;
     int user_session_count;
+
+    long transferred_bytes_count;
+    int total_user_session_count;
     
     struct fd_handler * fd_handler;
 };
@@ -250,6 +255,34 @@ void set_fd_handler(void (*handle_read)(struct selector_key * key), void (*handl
     server->fd_handler->handle_write = handle_write;
 }
 
+unsigned long get_transferred_bytes_count() {
+    if (server == NULL) {
+        return 0;
+    }
+    return server->transferred_bytes_count;
+}
+
+void add_transferred_bytes_count(unsigned long bytes) {
+    if (server == NULL) {
+        return;
+    }
+    server->transferred_bytes_count += bytes;
+}
+
+unsigned int get_total_user_session_count() {
+    if (server == NULL) {
+        return 0;
+    }
+    return server->total_user_session_count;
+}
+
+unsigned int get_user_session_count() {
+    if (server == NULL) {
+        return 0;
+    }
+    return server->user_session_count;
+}
+
 int add_user(session_ptr session) {
     user_node * current = server->users;
     if (current == NULL) {
@@ -267,6 +300,7 @@ int add_user(session_ptr session) {
     current->next->session = session;
     current->next->next = NULL;
     server->user_session_count++;
+    server->total_user_session_count++;
     return 0;
 }
 
