@@ -1,4 +1,5 @@
 #include "user_request.h"
+#include "user_response_parser.h"
 #include <stdio.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -16,7 +17,7 @@ int main(int argc, char *argv[])
     char rp_buffer[1024];
 
     build_request(req, rq_buffer);
-    printf("Request: %s\n", rq_buffer);
+    printf("Request: \n%s\n", rq_buffer);
 
     int rq_buffer_len = strlen(rq_buffer);
     int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -68,9 +69,38 @@ int main(int argc, char *argv[])
         printf("Response: %s\n", rp_buffer);
     }
 
-    // TODO: parse response and add status code translations
+    struct response * resp = malloc(sizeof(struct response));
+    if (parse_response(rp_buffer, resp) < 0) {
+        free(req);
+        free(resp);
+        close(sock);
+        fprintf(stderr, "parse_response: error\n");
+        exit(1);
+    }
+
+    switch(resp->status) {
+        case 20:
+            printf("%s\n", resp->message);
+            break;
+        case 40:
+            printf("Client error\n");
+            break;
+        case 41:
+            printf("Client error: unauthorized\n");
+            break;
+        case 42:
+            printf("Client error: user does not exist\n");
+            break;
+        case 50:
+            printf("Server error\n");
+            break;
+        default:
+            printf("Unknown error\n");
+            break;
+    }
 
     free(req);
+    free(resp);
     close(sock);
     return 0;
 }
