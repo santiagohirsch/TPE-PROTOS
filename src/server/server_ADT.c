@@ -27,7 +27,7 @@ struct server {
     user_node * users;
     int user_session_count;
 
-    long transferred_bytes;
+    long transferred_bytes_count;
     int total_user_session_count;
     
     struct fd_handler * fd_handler;
@@ -259,10 +259,24 @@ unsigned long get_transferred_bytes_count() {
     if (server == NULL) {
         return 0;
     }
-    return server->transferred_bytes;
+    return server->transferred_bytes_count;
 }
 
-int get_user_session_count() {
+void add_transferred_bytes_count(unsigned long bytes) {
+    if (server == NULL) {
+        return;
+    }
+    server->transferred_bytes_count += bytes;
+}
+
+unsigned int get_total_user_session_count() {
+    if (server == NULL) {
+        return 0;
+    }
+    return server->total_user_session_count;
+}
+
+unsigned int get_user_session_count() {
     if (server == NULL) {
         return 0;
     }
@@ -286,6 +300,7 @@ int add_user(session_ptr session) {
     current->next->session = session;
     current->next->next = NULL;
     server->user_session_count++;
+    server->total_user_session_count++;
     return 0;
 }
 

@@ -12,16 +12,15 @@ struct user_dir {
     bool is_open;
 };
 
-
-server_t init_server(int argc, char * argv[]);
-
-struct user_dir * get_user_dir(char * username, int len);
-
 int get_server_ipv4_socket();
 
 int get_server_ipv6_socket();
 
+server_t init_server(int argc, char * argv[]);
+
 void close_server();
+
+struct user_dir * get_user_dir(char * username, int len);
 
 char * get_root_dir();
 
@@ -31,7 +30,11 @@ void set_fd_handler(void (*handle_read)(struct selector_key * key), void (*handl
 
 unsigned long get_transferred_bytes_count();
 
-int get_user_session_count()
+void add_transferred_bytes_count(unsigned long bytes);
+
+unsigned int get_user_session_count()
+
+unsigned int get_total_user_session_count();
 
 int add_user(session_ptr session);
 
