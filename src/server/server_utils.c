@@ -67,7 +67,7 @@ int w_send(int sockfd, const void *buf, size_t len, int flags){
     return ret;
 }
 
-int setup_server(int port) {
+int setup_ipv4_server(int port) {
 
     struct sockaddr_in sock_address;
     memset(&sock_address, 0, sizeof(sock_address));
@@ -75,15 +75,37 @@ int setup_server(int port) {
     sock_address.sin_addr.s_addr = htonl(INADDR_ANY);
     sock_address.sin_port = htons(port);
     
-    int server = w_socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
+    int socket = w_socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
 
-    setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
+    setsockopt(socket, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
 
-    w_bind(server, (struct sockaddr *) &sock_address, sizeof(sock_address));
+    w_bind(socket, (struct sockaddr *) &sock_address, sizeof(sock_address));
 
-    w_listen(server, 20);
+    w_listen(socket, 20);
 
-    return 0;
+    return socket;
+}
+
+int setup_ipv6_server(int port) {
+
+    struct sockaddr_in6 sock_address;
+    memset(&sock_address, 0, sizeof(sock_address));
+    sock_address.sin6_family = AF_INET6;
+    sock_address.sin6_addr = in6addr_any;
+    sock_address.sin6_port = htons(port);
+    
+    int socket = w_socket(AF_INET6,SOCK_STREAM,IPPROTO_TCP);
+
+    setsockopt(socket, IPPROTO_IPV6, IPV6_V6ONLY, &(int){ 1 }, sizeof(int));
+
+    setsockopt(socket, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
+
+    w_bind(socket, (struct sockaddr *) &sock_address, sizeof(sock_address));
+
+    w_listen(socket, 20);
+
+    return socket;
+
 }
 
 int accept_connection(int server_sock){

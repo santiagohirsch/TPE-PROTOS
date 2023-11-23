@@ -17,7 +17,9 @@ server_t init_server(int argc, char * argv[]);
 
 struct user_dir * get_user_dir(char * username, int len);
 
-int get_server_socket();
+int get_server_ipv4_socket();
+
+int get_server_ipv6_socket();
 
 void close_server();
 

@@ -3,14 +3,21 @@
 
 #include <sys/socket.h>
 
-/* SETUP_SERVER
-*   - creates a socket and binds it to the specified port
+/* SETUP_IPV4_SERVER
+*   - sets up an IPv4 server
 *   - returns the socket file descriptor
 *   - returns -1 on error
-*   - params: port 
+*   - params: port
 */
-int setup_server(int port);
+int setup_ipv4_server(int port);
 
+/* SETUP_IPV6_SERVER
+*   - sets up an IPv6 server
+*   - returns the socket file descriptor
+*   - returns -1 on error
+*   - params: port
+*/
+int setup_ipv6_server(int port);
 
 /* ACCEPT_CONNECTION
 *   - accepts a connection on the specified socket

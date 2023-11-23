@@ -16,7 +16,8 @@ typedef struct user_node {
 } user_node;
 
 struct server {
-    int socket;
+    int ipv4_socket;
+    int ipv6_socket;
     int user_count;
     char * root_dir;
     struct user_dir ** users_dirs;
@@ -116,14 +117,20 @@ struct server * init_server(int argc, char * argv[]) {
         return NULL;
     }
     
-    int server_socket = setup_server(PORT);
-    if(server_socket < 0) {
-        perror("setup server error");
+    int ipv4_socket = setup_ipv4_server(PORT);
+    if(ipv4_socket < 0) {
+        perror("setup ipv4 server error");
+        return NULL;
+    }
+    int ipv6_socket = setup_ipv6_server(PORT);
+    if(ipv6_socket < 0) {
+        perror("setup ipv6 server error");
         return NULL;
     }
 
     server = calloc(1, sizeof(struct server));
-    server->socket = server_socket;
+    server->ipv4_socket = ipv4_socket;
+    server->ipv6_socket = ipv6_socket;
 
     server->users = NULL;
     server->user_session_count = 0;
@@ -180,8 +187,12 @@ struct server * init_server(int argc, char * argv[]) {
     return server;
 }
 
-int get_server_socket() {
-    return server->socket;
+int get_server_ipv4_socket() {
+    return server->ipv4_socket;
+}
+
+int get_server_ipv6_socket() {
+    return server->ipv6_socket;
 }
 
 struct user_dir * get_user_dir(char * username, int len) {
@@ -212,7 +223,11 @@ static void free_users_dirs() {
 }
 
 void close_server() {
-    close(server->socket);
+    if(server == NULL) {
+        return;
+    }
+    close(server->ipv4_socket);
+    close(server->ipv6_socket);
     free_users();
     if (server->users_dirs != NULL) {
         free_users_dirs();
