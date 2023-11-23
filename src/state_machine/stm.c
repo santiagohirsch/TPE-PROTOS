@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "stm.h"
+#include "../server/pop3_constants.h"
 #include "../parser/command_parser.h"
 #include "../server/commands.h"
 #include "../utils/stack_ADT.h"
@@ -61,7 +62,7 @@ int transaction(state_machine_ptr stm, session_ptr session, char *buffer, int by
     //TODO: ver si hay mas comandos transaction
     int len;
     struct parser_event *event = get_event(session);
-    char response[256] = {0};
+    char response[MAX_RESPONSE_LEN] = {0};
     if (strcmp(event->command, "QUIT") == 0) {
         quit_cmd(session);
         len = strlen("+OK POP3 server signing off\r\n");

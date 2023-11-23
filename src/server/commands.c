@@ -211,7 +211,7 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
 
     int response_len = 0;
     int current_line_len = 0;
-    char aux[256] = {0};
+    char aux[MAX_RESPONSE_LEN] = {0};
 
 
     if (action == PROCESS) {
