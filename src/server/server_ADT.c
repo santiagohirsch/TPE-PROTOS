@@ -21,7 +21,9 @@ struct server {
     char * root_dir;
     struct user_dir ** users_dirs;
     user_node * users;
+    int total_user_session_count;
     int user_session_count;
+    
     struct fd_handler * fd_handler;
 };
 
@@ -125,7 +127,9 @@ struct server * init_server(int argc, char * argv[]) {
 
     server->users = NULL;
     server->user_session_count = 0;
+    server->total_user_session_count = 0;
     server->fd_handler = malloc(sizeof(fd_handler));
+    server->fd_handler->handle_close = close_server;
 
     bool dir_set = false;
 
@@ -194,7 +198,6 @@ static void free_users() {
     user_node * current = server->users;
     while(current != NULL) {
         user_node * next = current->next;
-        delete_user_session(current->session);
         free(current);
         current = next;
     }
@@ -250,4 +253,40 @@ int add_user(session_ptr session) {
     current->next->next = NULL;
     server->user_session_count++;
     return 0;
+}
+
+int remove_user(session_ptr session) {
+    if (server == NULL)
+    {
+        return 0;
+    }
+
+    user_node * prev = server->users;
+
+    if (prev == NULL)
+    {
+        return -1;
+    }
+
+    user_node * current = prev->next;
+
+    if (current == NULL && prev->session == session) {
+        server->users = NULL;
+        free(prev);
+        return 0;
+    }
+
+    while (current != NULL) {
+        if (current->session == session) {
+            user_node * to_free = current;
+            prev->next = current->next;
+            free(to_free);
+            server->user_session_count--;
+            return 0;
+        }
+        prev = current;
+        current = prev->next;
+    }
+    return -1;
+    
 }

@@ -54,7 +54,8 @@ int main(int argc, char *argv[]){
         selector_select(fd_selector);
     }
 
-    close_server();
+    selector_destroy(fd_selector);
+    return 0;
 }
 
 static fd_selector new_fd_selector(int socket, fd_handler *handler, struct selector_init *conf){

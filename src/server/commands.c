@@ -1,6 +1,7 @@
 #include "commands.h"
 #include "server_ADT.h"
 #include "../session/session.h"
+#include "pop3_constants.h"
 #include <string.h>
 #include <sys/stat.h>
 #include <stdlib.h>
@@ -45,7 +46,7 @@ int pass_cmd(session_ptr session, char *arg, int arg_len, char *response, bool *
 
     strncpy(response, "+OK\n", len);
 
-    char dir[256] = {0};
+    char dir[MAX_MAIL_PATH_LEN] = {0};
 
     strcpy(dir, get_root_dir());
 
@@ -103,7 +104,7 @@ int stat_cmd(session_ptr session, char * arg, int len, char * response) {
          exit(1); //TODO error code
    } 
 
-   char mail_dir[256] = {0};
+   char mail_dir[MAX_MAIL_PATH_LEN] = {0};
    strcpy(mail_dir, get_root_dir());
    strcat(mail_dir, "/");
    strncat(mail_dir, username, username_len);
@@ -184,7 +185,7 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
     struct dirent * entry;
 
     char username[USERNAME_MAX_LEN] = {0};
-    char path[256] = {0};
+    char path[MAX_MAIL_PATH_LEN] = {0};
     int username_len = get_username(session, username);
     strcpy(path, get_root_dir());
     strcat(path, "/");
@@ -268,4 +269,36 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
     }
 
     return response_len;
+}
+
+int quit_cmd (session_ptr session) {
+    DIR * user_dir = get_dir(session);
+    rewinddir(user_dir);
+
+    char path_to_mail[MAX_MAIL_PATH_LEN] = {0};
+    char username[USERNAME_MAX_LEN] = {0};
+    int username_len = get_username(session, username);
+    strcpy(path_to_mail, get_root_dir());
+    strcat(path_to_mail, "/");
+    strncat(path_to_mail, username, username_len);
+    strcat(path_to_mail, "/");
+    int path_len = strlen(path_to_mail);
+
+    struct dirent * entry;
+    int * user_mails = get_dir_mails(session);
+    int total_mails = get_dir_mails_count(session);
+
+    int i = 0;
+    while((entry = readdir(user_dir)) != NULL && i < total_mails) {
+        if(entry->d_type == DT_REG) {
+            if(user_mails[i]) {
+                path_to_mail[path_len] = '\0';
+                strcat(path_to_mail, entry->d_name);
+                remove(path_to_mail);
+            }
+            i++;
+        }
+    }
+
+    return 0;
 }

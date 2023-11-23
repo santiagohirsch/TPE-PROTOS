@@ -42,7 +42,13 @@ int auth(state_machine_ptr stm, session_ptr session, char *buffer, int bytes) {
             strncpy(buffer, "-ERR [AUTH] Authentication failed\n", len);
         }
         
-    } else {
+    } else if (strncmp(event->command, "QUIT", bytes) == 0) {
+        len = strlen("+OK POP3 server signing off\n");
+        strncpy(buffer, "+OK POP3 server signing off\n", len);
+        stm->state = EXIT;
+    }
+    
+    else {
         pop_action(session);
         char * response = calloc(256, sizeof(char));
         len = sprintf(response, "-ERR Unknown command%s%s\r\n", strlen(event->command) > 0 ? ": " : ".", strlen(event->command) > 0 ? event->command : "");
@@ -56,8 +62,8 @@ int transaction(state_machine_ptr stm, session_ptr session, char *buffer, int by
     int len;
     struct parser_event *event = get_event(session);
     char response[256] = {0};
-    if (strncmp(event->command, "QUIT", bytes) == 0) {
-        pop_action(session);
+    if (strcmp(event->command, "QUIT") == 0) {
+        quit_cmd(session);
         len = strlen("+OK POP3 server signing off\r\n");
         strncpy(buffer, "+OK POP3 server signing off\r\n", len);
         stm->state = EXIT;

@@ -16,4 +16,6 @@ int rset_cmd(session_ptr session, char * arg, int len, char * response);
 
 int list_cmd(session_ptr session, char * arg, int len, char * response, int bytes);
 
+int quit_cmd(session_ptr session);
+
 #endif
