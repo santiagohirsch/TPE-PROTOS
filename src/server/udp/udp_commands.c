@@ -10,11 +10,13 @@ typedef void (*udp_command)(char * arg1, char * arg2, udp_resp * resp);
 void udp_get_bytes(char * arg1, char * arg2, udp_resp * resp) {
     unsigned long package_bytes = get_transferred_bytes_count();
     snprintf(resp->value, 256, "%lu", package_bytes);
+    resp->code = OK;
 }
 
 void udp_get_current(char * arg1, char * arg2, udp_resp * resp) {
     int current_users = get_user_session_count();
     snprintf(resp->value, 256, "%d", current_users);
+    resp->code = OK;
 }
 
 void udp_get_history(char * arg1, char * arg2, udp_resp * resp) {
@@ -23,11 +25,32 @@ void udp_get_history(char * arg1, char * arg2, udp_resp * resp) {
 }
 
 void udp_change_password(char * arg1, char * arg2, udp_resp * resp) {
-    ;
+    char * username = arg1;
+    char * password = arg2;
+
+    if (username == NULL || password == NULL) {
+        resp->code = CLIENT_ERROR;
+        return;
+    }
+
+    if (strlen(username) > USERNAME_MAX_LEN || strlen(password) > PASSWORD_MAX_LEN) {
+        resp->code = CLIENT_ERROR;
+        return;
+    }
+
+    struct user_dir * user = get_user_dir(username, strlen(username));
+
+    if (user == NULL) {
+        resp->code = USER_DOES_NOT_EXIST;
+        return;
+    }
+
+    strcpy(user->pass, password);
+    resp->code = OK;
 }
 
 void udp_delete_user(char * arg1, char * arg2, udp_resp * resp) {
-    ;
+    
 }
 
 typedef struct udp_command_elem {
@@ -66,7 +89,5 @@ void handle_request(udp_rqst * req, udp_resp * resp) {
 
     resp->rqst_id = req->id;
     command(req->arg1, req->arg2, resp);
-
-    resp->code = OK;
 }
 

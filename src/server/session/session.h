@@ -2,6 +2,7 @@
 #define _SESSION_H_
 
 #define USERNAME_MAX_LEN 40
+#define PASSWORD_MAX_LEN 16
 
 #include <stdbool.h>
 #include "../parser/command_parser.h"
