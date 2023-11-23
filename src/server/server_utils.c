@@ -4,9 +4,9 @@
 #include <string.h>
 #include "server_utils.h"
 #include <unistd.h>
-#include "../state_machine/stm.h"
-#include "../parser/command_parser.h"
-#include "../session/session.h"
+#include "./state_machine/stm.h"
+#include "./parser/command_parser.h"
+#include "./session/session.h"
 
 
 //TODO: Agregar codigos de error al .h
@@ -67,7 +67,7 @@ int w_send(int sockfd, const void *buf, size_t len, int flags){
     return ret;
 }
 
-int setup_server(int port) {
+int setup_ipv4_server(int port) {
 
     struct sockaddr_in sock_address;
     memset(&sock_address, 0, sizeof(sock_address));
@@ -75,15 +75,37 @@ int setup_server(int port) {
     sock_address.sin_addr.s_addr = htonl(INADDR_ANY);
     sock_address.sin_port = htons(port);
     
-    int server = w_socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
+    int socket = w_socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
 
-    setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
+    setsockopt(socket, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
 
-    w_bind(server, (struct sockaddr *) &sock_address, sizeof(sock_address));
+    w_bind(socket, (struct sockaddr *) &sock_address, sizeof(sock_address));
 
-    w_listen(server, 50);
+    w_listen(socket, 20);
 
-    return 0;
+    return socket;
+}
+
+int setup_ipv6_server(int port) {
+
+    struct sockaddr_in6 sock_address;
+    memset(&sock_address, 0, sizeof(sock_address));
+    sock_address.sin6_family = AF_INET6;
+    sock_address.sin6_addr = in6addr_any;
+    sock_address.sin6_port = htons(port);
+    
+    int socket = w_socket(AF_INET6,SOCK_STREAM,IPPROTO_TCP);
+
+    setsockopt(socket, IPPROTO_IPV6, IPV6_V6ONLY, &(int){ 1 }, sizeof(int));
+
+    setsockopt(socket, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
+
+    w_bind(socket, (struct sockaddr *) &sock_address, sizeof(sock_address));
+
+    w_listen(socket, 20);
+
+    return socket;
+
 }
 
 int accept_connection(int server_sock){
@@ -96,24 +118,16 @@ int accept_connection(int server_sock){
     return client;
 }
 
-int handle_connection(int client) {
+int setup_udp_ipv4(int port) {
+    struct sockaddr_in sock_address;
+    memset(&sock_address, 0, sizeof(sock_address));
+    sock_address.sin_family = AF_INET;
+    sock_address.sin_addr.s_addr = htonl(INADDR_ANY);
+    sock_address.sin_port = htons(port);
 
-    // Initialize user session
-    session_ptr session = new_session(client);
+    int udp_socket = w_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
-    while(get_session_state(session) != EXIT) {
+    w_bind(udp_socket, (struct sockaddr *) &sock_address, sizeof(sock_address));
 
-        // Read from session
-        struct parser_event * event = read_session(session);
-
-        // Continue session
-        int bytes_to_write = continue_session(session);
-
-        // Write to session
-        send_session_response(session, bytes_to_write);
-    }
-
-    // Close connection
-    close(client);
-    return 0;
+    return udp_socket;
 }

@@ -1,6 +1,9 @@
 # Binaries folder
 bin
 
+# Mail test folder
+mail
+
 # Prerequisites
 *.d
 

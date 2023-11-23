@@ -3,14 +3,21 @@
 
 #include <sys/socket.h>
 
-/* SETUP_SERVER
-*   - creates a socket and binds it to the specified port
+/* SETUP_IPV4_SERVER
+*   - sets up an IPv4 server
 *   - returns the socket file descriptor
 *   - returns -1 on error
-*   - params: port 
+*   - params: port
 */
-int setup_server(int port);
+int setup_ipv4_server(int port);
 
+/* SETUP_IPV6_SERVER
+*   - sets up an IPv6 server
+*   - returns the socket file descriptor
+*   - returns -1 on error
+*   - params: port
+*/
+int setup_ipv6_server(int port);
 
 /* ACCEPT_CONNECTION
 *   - accepts a connection on the specified socket
@@ -19,14 +26,6 @@ int setup_server(int port);
 *   - params: server socket file descriptor
 */
 int accept_connection(int server);
-
-/* HANDLE_CONNECTION
-*   - handles a connection on the specified socket
-*   - returns 0 on success
-*   - returns -1 on error
-*   - params: client socket file descriptor
-*/
-int handle_connection(int client);
 
 /* W_SOCKET
 *   - creates a socket
@@ -75,5 +74,13 @@ int w_recv(int sockfd, void *buf, size_t len, int flags);
 *   - params: socket file descriptor, buffer, buffer length, flags
 */
 int w_send(int sockfd, const void *buf, size_t len, int flags);
+
+/* SETUP_UDP_IPV4
+*   - creates a UDP socket and binds it to the specified port
+*   - returns the socket file descriptor
+*   - returns -1 on error
+*   - params: port 
+*/
+int setup_udp_ipv4(int port);
 
 #endif
