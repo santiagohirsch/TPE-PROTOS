@@ -7,17 +7,6 @@
 #define USER_DOES_NOT_EXIST 42
 #define SERVER_ERROR 50
 
-
-struct udp_rqst {
-    int ip_version;
-    char username[32];
-    char password[32];
-    int id;
-    char *command;
-    char *arg1;
-    char *arg2;
-};
-
 struct udp_command {
     char *command;
 };
