@@ -9,6 +9,7 @@
 #include "./selector/selector.h"
 #include <string.h>
 #include "./udp/udp_ADT.h"
+#include "./udp/udp_handler.h"
 
 #define MAX_CURRENT_CLIENTS 500
 
@@ -27,7 +28,7 @@ int main(int argc, char *argv[]){
 
     // close stdin, stdout
     close(0);
-    close(1);
+    // close(1);
 
     // handle signals
     signal(SIGINT, handle_signal);
@@ -46,7 +47,7 @@ int main(int argc, char *argv[]){
     /*udp_ADT udp_server = */init_udp();
     int udp_sock = get_udp_socket();
     //set_udp_fd_handler(&handle_udp_read, &handle_udp_write);
-    set_udp_fd_handler(NULL, NULL);
+    set_udp_fd_handler(&udp_read, NULL);
     struct fd_handler *udp_handler = get_udp_fd_handler();
 
     // setup selector
