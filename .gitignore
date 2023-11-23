@@ -79,5 +79,8 @@ dkms.conf
 # CLion IDE
 .idea/
 
+# VSCode IDE
+.vscode/
+
 # Other files
 .bash_history
