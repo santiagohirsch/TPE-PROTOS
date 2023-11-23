@@ -31,12 +31,14 @@ struct server * server = NULL;
 
 static int users_registered = 0;
 
-static struct user_dir ** init_users_dirs(char * root_dir, int * user_count) {
+static void init_users_dirs(char * root_dir) {
     DIR * dir = opendir(root_dir);
     if(dir == NULL) {
         perror("opendir error");
         exit(1);
     }
+
+    server->root_dir = root_dir;
 
     int count = 0;
     struct dirent * entry;
@@ -58,13 +60,15 @@ static struct user_dir ** init_users_dirs(char * root_dir, int * user_count) {
     users[count] = NULL;
 
     closedir(dir);
-    *user_count = count;
-    return users;
+
+    server->users_dirs = users;
+    server->user_count = count;
 }
 
 static int handle_user_option(int argc, char * argv[]) {
     if(argc == 0) {
         fprintf(stderr, "user option requires an argument\n");
+        close_server();
         return -1;
     }
 
@@ -72,6 +76,7 @@ static int handle_user_option(int argc, char * argv[]) {
     char * username = strtok(argv[0], delimeter);
     if(username == NULL) {
         fprintf(stderr, "user option requires an argument\n");
+        close_server();
         return -1;
     }
 
@@ -87,10 +92,12 @@ static int handle_user_option(int argc, char * argv[]) {
     char * password = strtok(NULL, delimeter);
     if(password == NULL) {
         fprintf(stderr, "no password provided\n");
+        close_server();
         return -1;
     }
     if(strlen(password) > 15) {
         fprintf(stderr, "password too long\n");
+        close_server();
         return -1;
     }
     strcpy(server->users_dirs[idx]->pass, password);
@@ -98,9 +105,15 @@ static int handle_user_option(int argc, char * argv[]) {
     return 1;
 }
 
-struct server * init_server(char * root_dir, int argc, char * argv[]) {
+struct server * init_server(int argc, char * argv[]) {
     if(server != NULL) {
         return server;
+    }
+
+    if(argc <= 1) {
+        fprintf(stderr, "no root dir and users provided\n");
+        fprintf(stderr, "usage: ./main -d <root_dir> -u <user:pass> [-u <user:pass>]...\n");
+        return NULL;
     }
     
     int server_socket = setup_server(PORT);
@@ -109,15 +122,44 @@ struct server * init_server(char * root_dir, int argc, char * argv[]) {
         return NULL;
     }
 
-    server = malloc(sizeof(struct server));
+    server = calloc(1, sizeof(struct server));
     server->socket = server_socket;
-    server->root_dir = root_dir;
-    server->users_dirs = init_users_dirs(root_dir, &server->user_count);
+
+    server->users = NULL;
+    server->user_session_count = 0;
+    server->total_user_session_count = 0;
+    server->fd_handler = malloc(sizeof(fd_handler));
+    server->fd_handler->handle_close = close_server;
+
+    bool dir_set = false;
 
     argv++;
     argc--;
     while(argc > 0) {
-        if(strcmp(argv[0],"-u") == 0) {
+
+        if(strcmp(argv[0], "-d") == 0) {
+            if (dir_set) {
+                fprintf(stderr, "root dir already set\n");
+                close_server();
+                return NULL;
+            } else {
+                argv++;
+                argc--;
+                if(argc == 0) {
+                    fprintf(stderr, "root dir option requires an argument\n");
+                    close_server();
+                    return NULL;
+                }
+                server->root_dir = argv[0];
+                init_users_dirs(argv[0]);
+                dir_set = true;
+            }
+        } else if(strcmp(argv[0],"-u") == 0) {
+            if (!dir_set) {
+                fprintf(stderr, "root dir not set\n");
+                close_server();
+                return NULL;
+            }
             argv++;
             argc--;
             handle_user_option(argc,argv);
@@ -130,11 +172,11 @@ struct server * init_server(char * root_dir, int argc, char * argv[]) {
         argc--;
     }
 
-    server->users = NULL;
-    server->total_user_session_count = 0;
-    server->user_session_count = 0;
-    server->fd_handler = malloc(sizeof(fd_handler));
-    server->fd_handler->handle_close = close_server;
+    if (users_registered < server->user_count) {
+        fprintf(stderr, "not all users registered\n");
+        close_server();
+        return NULL;
+    }
     return server;
 }
 
@@ -172,7 +214,9 @@ static void free_users_dirs() {
 void close_server() {
     close(server->socket);
     free_users();
-    free_users_dirs();
+    if (server->users_dirs != NULL) {
+        free_users_dirs();
+    }
     free(server->fd_handler);
     free(server);
     server = NULL;

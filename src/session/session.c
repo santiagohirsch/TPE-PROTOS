@@ -8,7 +8,7 @@
 #include "../buffer/buffer.h"
 #include "../server/server_utils.h"
 #include "../utils/stack_ADT.h"
-//#include "../server/server_ADT.h"
+#include "../server/server_ADT.h"
 
 struct user_mail_dir {
     DIR * dir_ptr;
