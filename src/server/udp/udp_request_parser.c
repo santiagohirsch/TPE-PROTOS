@@ -98,7 +98,7 @@ int parse_error(char *key, char *value, struct udp_rqst *rqst, parser_state *sta
     exit(1);    
 }
 
-parser_handler handlers[8] = {
+parser_handler handlers[] = {
     parse_header,
     parse_username,
     parse_password,
@@ -129,9 +129,5 @@ int udp_parse_request(char *request, struct udp_rqst *rqst) {
         line = strtok(NULL, "\r\n");
     }
 
-    if (state == FINISHED) {
-        return 0;
-    } else {
-        return -1;
-    }
+    return state == FINISHED ? 0 : -1;
 }

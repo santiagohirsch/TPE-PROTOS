@@ -8,9 +8,9 @@ struct request {
     char username[32];
     char password[32];
     int id;
-    char *command;
-    char *arg1;
-    char *arg2;
+    char command[32];
+    char arg1[32];
+    char arg2[32];
 }request;
 
 typedef int(*request_handler)(struct request *req, int argc, char *argv[]);
@@ -71,55 +71,97 @@ static int auth_handler(struct request *req, int argc, char *argv[])
 
 static int current_handler(struct request *req, int argc, char *argv[])
 {
-    req->command = "current";
+    if (argc != 0) {
+        fprintf(stderr, "Invalid usage\n");
+        fprintf(stderr, "Too many arguments\n");
+        fprintf(stderr, "Usage: ./user current\n");
+        exit(1);
+    }
+    strcpy(req->command, "current");
     return 1;
 }
 
 static int history_handler(struct request *req, int argc, char *argv[])
 {
-    req->command = "history";
+    if (argc != 0) {
+        fprintf(stderr, "Invalid usage\n");
+        fprintf(stderr, "Too many arguments\n");
+        fprintf(stderr, "Usage: ./user history\n");
+        exit(1);
+    }
+    strcpy(req->command, "history");
     return 1;
 }
 
 static int bytes_handler(struct request *req, int argc, char *argv[])
 {
-    req->command = "bytes";
+    if (argc != 0) {
+        fprintf(stderr, "Invalid usage\n");
+        fprintf(stderr, "Too many arguments\n");
+        fprintf(stderr, "Usage: ./user bytes\n");
+        exit(1);
+    }
+    strcpy(req->command, "bytes");
     return 1;
 }
 
 static int password_handler(struct request *req, int argc, char *argv[])
 {
-    if (argc != 1) {
-        fprintf(stderr, "Missing password\n");
+    if (argc < 2) {
+        fprintf(stderr, "Invalid usage\n");
+        fprintf(stderr, "Missing arguments\n");
         fprintf(stderr, "Usage: ./user password <user password>\n");
         exit(1);
     }
 
-    if (strlen(argv[0]) > 32) {
+    if (argc > 2) {
+        fprintf(stderr, "Invalid usage\n");
+        fprintf(stderr, "Too many arguments\n");
+        fprintf(stderr, "Usage: ./user password <user password>\n");
+        exit(1);
+    }
+
+    if (strlen(argv[1]) > 32) {
         fprintf(stderr, "Password too long\n");
         exit(1);
     }
 
-    req->command = "password";
-    req->arg1 = argv[0];
+    strcpy(req->command, "password");
+    strcpy(req->arg1, argv[0]);
+    strcpy(req->arg2, argv[1]);
     return 1;
 }
 
 static int delete_handler(struct request *req, int argc, char *argv[])
 {
-    if (argc != 1) {
-        fprintf(stderr, "Missing username\n");
+    if (argc < 1) {
+        fprintf(stderr, "Invalid usage\n");
+        fprintf(stderr, "Missing arguments\n");
         fprintf(stderr, "Usage: ./user delete <user>\n");
         exit(1);
     }
 
-    if (strlen(argv[0]) > 32) {
-        fprintf(stderr, "Username too long\n");
+    if (argc > 1) {
+        fprintf(stderr, "Invalid usage\n");
+        fprintf(stderr, "Too many arguments\n");
+        fprintf(stderr, "Usage: ./user delete <user>\n");
         exit(1);
     }
 
-    req->command = "delete";
-    req->arg1 = argv[0];
+    strcpy(req->command, "delete");
+    strcpy(req->arg1, argv[0]);
+    return 1;
+}
+
+static int concurrent_handler(struct request *req, int argc, char *argv[])
+{
+    if (argc != 0) {
+        fprintf(stderr, "Invalid usage\n");
+        fprintf(stderr, "Too many arguments\n");
+        fprintf(stderr, "Usage: ./user concurrent\n");
+        exit(1);
+    }
+    strcpy(req->command, "concurrent");
     return 1;
 }
 
@@ -128,7 +170,8 @@ struct option options[] = {
     {"history", history_handler},
     {"bytes", bytes_handler},
     {"password", password_handler},
-    {"delete", delete_handler}
+    {"delete", delete_handler},
+    {"concurrent", concurrent_handler}
 };
 
 struct request * get_request(int argc, char * argv[]) {
@@ -211,12 +254,12 @@ void build_request(struct request * req, char * buf) {
     strcat(buf, "command: ");
     strcat(buf, req->command);
     strcat(buf, "\r\n");
-    if (req->arg1 != NULL) {
+    if (req->arg1[0] != '\0') {
         strcat(buf, "arg1: ");
         strcat(buf, req->arg1);
         strcat(buf, "\r\n");
     }
-    if (req->arg2 != NULL) {
+    if (req->arg2[0] != '\0') {
         strcat(buf, "arg2: ");
         strcat(buf, req->arg2);
         strcat(buf, "\r\n");
