@@ -223,7 +223,7 @@ void init_user_dir(session_ptr session) {
     session->dir->mails_count = file_count;
 }
 
-static char is_marked_to_delete(session_ptr session, int mail) {
+char is_marked_to_delete(session_ptr session, int mail) {
     return session->dir->mails[mail -1] == true;
 }
 

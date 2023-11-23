@@ -10,6 +10,7 @@
 
 typedef struct user_session *session_ptr;
 
+
 typedef enum action_type {
     READ = 0,
     READING,
@@ -61,6 +62,8 @@ fd_handler * get_session_fd_handler(session_ptr session);
 DIR * get_dir(session_ptr session);
 
 void init_user_dir(session_ptr session);
+
+char is_marked_to_delete(session_ptr session, int mail);
 
 int mark_to_delete(session_ptr session, int mail);
 

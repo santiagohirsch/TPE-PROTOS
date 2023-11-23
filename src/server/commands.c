@@ -87,13 +87,15 @@ static ssize_t get_file_size(const char * mail, const char * file) {
     return st.st_size;
 }
 
-static void get_file_stats(DIR * dir, const char * path, int * file_count, int * bytes) {
+static void get_file_stats(DIR * dir, const char * path, int * file_count, int * bytes, int * marked_mails) {
     struct dirent * entry;
-
+    int i = 0;
    while((entry = readdir(dir)) != NULL) {
        if(entry->d_type == DT_REG) {
-           *file_count += 1;
-           *bytes += get_file_size(path, entry->d_name);
+            if(!marked_mails[i++]) {
+                *file_count += 1;
+                *bytes += get_file_size(path, entry->d_name);
+            }
        }
    }
 }
@@ -137,7 +139,7 @@ int stat_cmd(session_ptr session, char * arg, int len, char * response) {
        }
     }
 
-   get_file_stats(dir, mail_dir, &file_count, &bytes);
+   get_file_stats(dir, mail_dir, &file_count, &bytes,user_mails);
 
    sprintf(response, "%d %d", file_count, bytes);
 
@@ -169,14 +171,17 @@ int rset_cmd(session_ptr session, char * arg, int len, char * response) {
 static struct dirent * read_files(DIR * dir, long msg_num) {
     struct dirent * entry = readdir(dir);
     int i = 0;
-    while(i < msg_num && entry != NULL) {
-        
-        if(entry->d_type == DT_REG) {
+     while (entry != NULL) {
+        if (entry->d_type == DT_REG) {
             i++;
+            if (i == msg_num) {
+                return entry; // Devolver el archivo cuando se encuentre el número correspondiente
+            }
         }
         entry = readdir(dir);
     }
-    return entry;
+
+    return NULL;
 }
 
 
@@ -223,7 +228,7 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
         rewinddir(dir);
         int count = 0;
         int bytes = 0;
-        get_file_stats(dir, path, &count, &bytes);
+        get_file_stats(dir, path, &count, &bytes, get_dir_mails(session));
         response_len = sprintf(aux, "+OK %d messages (%d octets)\r\n", count, bytes);
         strncpy(response, aux, response_len);
         response[response_len] = '\0';
@@ -241,7 +246,9 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
             path[path_len] = '\0';
             strcat(path, entry->d_name);
             stat(path, &st);
-            current_line_len = sprintf(aux, "%d %lld\r\n", idx, st.st_size);
+            if(!is_marked_to_delete(session,idx)) {
+                current_line_len = sprintf(aux, "%d %lld\r\n", idx, st.st_size);
+            }
             if (response_len + current_line_len < bytes) {
                 response_len += current_line_len;
                 strncat(response, aux, current_line_len);
@@ -249,7 +256,7 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
                 location = telldir(dir);
                 entry = readdir(dir);
             }
-            
+
         } else {
             entry = readdir(dir);
         }
