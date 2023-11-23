@@ -9,6 +9,7 @@
 #include "./selector/selector.h"
 #include <string.h>
 #include "./udp/udp_ADT.h"
+#include "./utils/logger.h"
 
 #define MAX_CURRENT_CLIENTS 500
 
@@ -27,7 +28,6 @@ int main(int argc, char *argv[]){
 
     // close stdin, stdout
     close(0);
-    close(1);
 
     // handle signals
     signal(SIGINT, handle_signal);
@@ -36,18 +36,28 @@ int main(int argc, char *argv[]){
     // setup server
     /*server_t server = */init_server(argc, argv);
     int server_ipv4_sock = get_server_ipv4_socket();
+    log_msg(LOG_INFO, "server ipv4 socket: %d", server_ipv4_sock);
+
     int server_ipv6_sock = get_server_ipv6_socket();
+    log_msg(LOG_INFO, "server ipv6 socket: %d", server_ipv6_sock);
 
     set_fd_handler(&accept_passive_connection, NULL);
     struct fd_handler *server_handler = malloc(sizeof(fd_handler));
     memcpy((void *)server_handler, get_fd_handler(), sizeof(fd_handler));
 
+    log_msg(LOG_INFO, "server initialization complete");
+
     // setup udp
     /*udp_ADT udp_server = */init_udp();
     int udp_sock = get_udp_socket();
+    log_msg(LOG_INFO, "got udp socket: %d", udp_sock);
+
     //set_udp_fd_handler(&handle_udp_read, &handle_udp_write);
     set_udp_fd_handler(NULL, NULL);
     struct fd_handler *udp_handler = get_udp_fd_handler();
+
+    log_msg(LOG_INFO, "udp initialization complete");
+
 
     // setup selector
     struct selector_init conf = {
@@ -64,14 +74,18 @@ int main(int argc, char *argv[]){
     selector_register(fd_selector, udp_sock, udp_handler, OP_READ, NULL);
     selector_register(fd_selector, server_ipv4_sock, server_handler, OP_READ, NULL);
 
+    log_msg(LOG_INFO, "selector initialization complete");
 
     // main loop
     while(!received_signal){
         selector_select(fd_selector);
     }
 
+    // cleanup
     selector_destroy(fd_selector);
     free(server_handler);
+
+    log_msg(LOG_INFO, "server shutting down");
     return 0;
 }
 
@@ -79,7 +93,7 @@ static fd_selector new_fd_selector(int ipv4_socket, int ipv6_socket, fd_handler 
     int ret = selector_init(conf);
     if(ret != 0){
         perror("selector_init");
-        exit(1);
+        exit(1);    // TODO: handle this error with logs
     }
 
     if (selector_fd_set_nio(ipv4_socket) == -1) {
