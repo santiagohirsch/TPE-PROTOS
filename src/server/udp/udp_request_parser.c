@@ -109,24 +109,36 @@ parser_handler handlers[] = {
     parse_error
 };
 
+static int parse_line(char *line, char *key, char *value) {
+    char *svptr;
+    char *aux = strtok_r(line, ":\r\n", &svptr);
+    strcpy(key, aux);
+
+    while(*svptr == ' ') {
+        svptr++;
+    }
+    aux = strtok_r(NULL, "\r\n", &svptr);
+    if (aux != NULL) {
+        strcpy(value, aux);
+    }
+    return 1;
+}
+
 int udp_parse_request(char *request, struct udp_rqst *rqst) {
     parser_state state = HEADER;
-    char *line = strtok(request, "\r\n");
+    char *delim = "\r\n";
+    char *svptr;
+    char *line = strtok_r(request, delim, &svptr);
+    char key_value[32];
+    char value[32];
 
-    while (line != NULL && state != FINISHED && state != ERROR) {
-        char *key_value = strtok(line, ":");
-        
-        if (key_value != NULL) {
-            char *key = key_value;
-            char *value = strtok(NULL, ":");
-            
-            if (value == NULL) {
-                state = ERROR;
-            } 
-            handlers[state](key, value, rqst, &state);
+    while (line != NULL) {
+        if (parse_line(line, key_value, value)) {
+            handlers[state](key_value, value, rqst, &state);
+            line = strtok_r(NULL, delim, &svptr);
+            key_value[0] = '\0';
+            value[0] = '\0';
         }
-
-        line = strtok(NULL, "\r\n");
     }
 
     return state == FINISHED ? 0 : -1;
