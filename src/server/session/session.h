@@ -18,7 +18,8 @@ typedef enum action_type {
     PROCESS,
     PROCESSING,
     WRITE,
-    WRITING
+    WRITING,
+    ERR
 } action_type;
 
 typedef enum byte_stuffing_state {
