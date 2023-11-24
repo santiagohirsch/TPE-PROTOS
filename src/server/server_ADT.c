@@ -95,6 +95,21 @@ static void register_admin(int argc, char *argv[]) {
     set_admin(username, password);
 }
 
+static int register_port(int argc, char *argv[]) {
+    if (argc == 0) {
+        log_msg(LOG_FATAL, "-p: Usage: -p <port>");
+    }
+    char * port = argv[0];
+    if (strlen(port) > 5) {
+        log_msg(LOG_FATAL, "-p: port too long");
+    }
+    int port_int = atoi(port);
+    if (port_int < 0 || port_int > 65535) {
+        log_msg(LOG_FATAL, "-p: invalid port");
+    }
+    return port_int;
+}
+
 static int handle_user_option(int argc, char * argv[]) {
     if(argc == 0) {
         fprintf(stderr, "user option requires an argument\n");
@@ -139,27 +154,14 @@ struct server * init_server(int argc, char * argv[]) {
     if(server != NULL) {
         return server;
     }
-
+    int port = PORT;
     if(argc <= 1) {
         fprintf(stderr, "no root dir and users provided\n");
         fprintf(stderr, "usage: ./main -d <root_dir> -u <user:pass> [-u <user:pass>]...\n");
         return NULL;
     }
-    
-    int ipv4_socket = setup_ipv4_server(PORT);
-    if(ipv4_socket < 0) {
-        perror("setup ipv4 server error");
-        return NULL;
-    }
-    int ipv6_socket = setup_ipv6_server(PORT);
-    if(ipv6_socket < 0) {
-        perror("setup ipv6 server error");
-        return NULL;
-    }
 
     server = calloc(1, sizeof(struct server));
-    server->ipv4_socket = ipv4_socket;
-    server->ipv6_socket = ipv6_socket;
 
     server->users = NULL;
     server->user_session_count = 0;
@@ -170,6 +172,7 @@ struct server * init_server(int argc, char * argv[]) {
 
     bool dir_set = false;
     bool admin_set = false;
+    bool port_set = false;
     argv++;
     argc--;
     while(argc > 0) {
@@ -213,6 +216,14 @@ struct server * init_server(int argc, char * argv[]) {
             argc--;
             register_admin(argc, argv);
             
+        } else if(strcmp(argv[0], "-p") == 0) {
+            if (port_set) {
+                log_msg(LOG_FATAL, "port already set");
+            }
+            argv++;
+            argc--;
+            port = register_port(argc, argv);
+            port_set = true;
         }
         else {
             fprintf(stderr, "invalid command\n");
@@ -221,6 +232,17 @@ struct server * init_server(int argc, char * argv[]) {
         argv++;
         argc--;
     }
+
+    int ipv4_socket = setup_ipv4_server(port);
+    int ipv6_socket = setup_ipv6_server(port);
+
+    if (ipv4_socket < 0 || ipv6_socket < 0) {
+        log_msg(LOG_FATAL, "setup server error");
+        return NULL;
+    }
+
+    server->ipv4_socket = ipv4_socket;
+    server->ipv6_socket = ipv6_socket;
 
     if (users_registered < server->user_count) {
         fprintf(stderr, "not all users registered\n");

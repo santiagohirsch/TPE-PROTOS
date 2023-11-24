@@ -7,6 +7,7 @@
 #include "../parser/command_parser.h"
 #include "../commands.h"
 #include "../utils/stack_ADT.h"
+#include <ctype.h>
 
 typedef struct state_machine {
     state state;
@@ -14,7 +15,11 @@ typedef struct state_machine {
 
 typedef int (*state_handler)(state_machine_ptr stm, session_ptr session, char *buffer, int bytes);
 
-//TODO: Agregar mensajes a un .h (+OK POP3 server READY, -ERR Unknown command, etc)
+static void str_to_upper(char * str) {
+    for (int i = 0; i < strlen(str); i++) {
+        str[i] = toupper(str[i]);
+    }
+}
 
 int start(state_machine_ptr stm, session_ptr session, char *buffer, int bytes) {
     pop_action(session);
@@ -144,6 +149,8 @@ void free_state_machine(state_machine_ptr stm) {
 }
 
 int state_machine_run(state_machine_ptr stm, session_ptr session, char *buffer, int bytes) {
+    struct parser_event *event = get_event(session);
+    str_to_upper(event->command);
     return (*state_handlers[stm->state])(stm, session, buffer, bytes);
 }
 

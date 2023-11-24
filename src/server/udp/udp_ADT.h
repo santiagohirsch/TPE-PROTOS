@@ -7,7 +7,9 @@ typedef struct udp * udp_ADT;
 
 udp_ADT init_udp();
 
-int get_udp_socket();
+int get_udp_ipv4_socket();
+
+int get_udp_ipv6_socket();
 
 void set_admin(char * username, char * password);
 

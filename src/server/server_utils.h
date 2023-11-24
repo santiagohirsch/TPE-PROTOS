@@ -83,4 +83,12 @@ int w_send(int sockfd, const void *buf, size_t len, int flags);
 */
 int setup_udp_ipv4(int port);
 
+/* SETUP_UDP_IPV6
+*   - creates a UDP socket and binds it to the specified port
+*   - returns the socket file descriptor
+*   - returns -1 on error
+*   - params: port 
+*/
+int setup_udp_ipv6(int port);
+
 #endif

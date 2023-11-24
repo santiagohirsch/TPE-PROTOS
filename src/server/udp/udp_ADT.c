@@ -17,7 +17,8 @@ typedef struct user_admin {
 } user_admin;
 
 struct udp {
-    int socket;
+    int ipv4_socket;
+    int ipv6_socket;
     user_admin admin;
     struct fd_handler *fd_handler;
 };
@@ -29,15 +30,20 @@ struct udp * udp_server = NULL;
 udp_ADT init_udp() {
     if (udp_server == NULL) {
         udp_server = calloc(1, sizeof(struct udp));
-        udp_server->socket = setup_udp_ipv4(UPD_PORT);
+        udp_server->ipv4_socket = setup_udp_ipv4(UPD_PORT);
+        udp_server->ipv6_socket = setup_udp_ipv6(UPD_PORT);
         udp_server->fd_handler = malloc(sizeof(fd_handler));
         udp_server->fd_handler->handle_close = close_udp_fd_handler;
     }
     return udp_server;
 }
 
-int get_udp_socket() {
-    return udp_server->socket;
+int get_udp_ipv4_socket() {
+    return udp_server->ipv4_socket;
+}
+
+int get_udp_ipv6_socket() {
+    return udp_server->ipv6_socket;
 }
 
 void set_admin(char * username, char * password) {
@@ -60,7 +66,8 @@ void set_udp_fd_handler(void (*handle_read)(struct selector_key * key), void (*h
 
 void close_udp() {
     if (udp_server != NULL) {
-        close(udp_server->socket);
+        close(udp_server->ipv4_socket);
+        close(udp_server->ipv6_socket);
         free(udp_server->fd_handler);
         free(udp_server);
     }
