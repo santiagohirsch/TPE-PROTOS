@@ -8,4 +8,4 @@ CFLAGS := -Wall -Wextra -Wno-unused-parameter -std=c11 -pedantic-errors -g -fsan
 SRC_DIR := src
 
 # Binary output directory
-BIN_DIR := bin
+BIN_DIR := ../..

@@ -9,7 +9,7 @@ OBJ := $(pathsubst $(SRC_DIR)/%.c, $(BIN_DIR)/%.o, $(SRC))
 
 # Binary output
 
-TARGET := $(BIN_DIR)/main
+TARGET := $(BIN_DIR)/server
 
 # Default target
 
@@ -24,4 +24,4 @@ $(TARGET): $(SRC)
 # Clean the object files and the binary
 
 clean:
-	rm -rf $(BIN_DIR)
+	rm -rf $(BIN_DIR)/server
