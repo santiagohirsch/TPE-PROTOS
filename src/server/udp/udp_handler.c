@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <netdb.h>
 #include <sys/types.h>
+#include "../utils/logger.h"
 
 #define MAX_BYTES_TO_READ 256
 

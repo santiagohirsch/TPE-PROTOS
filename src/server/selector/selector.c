@@ -1,7 +1,7 @@
 /**
  * selector.c - un muliplexor de entrada salida
  */
-#include <stdio.h>  // perror
+#include <stdio.h>  // stderror
 #include <stdlib.h> // malloc
 #include <string.h> // memset
 #include <assert.h> // :)
@@ -16,6 +16,7 @@
 #include <sys/select.h>
 #include <signal.h>
 #include "selector.h"
+#include "../utils/logger.h"
 
 #define N(x) (sizeof(x)/sizeof((x)[0]))
 
@@ -556,7 +557,7 @@ selector_select(fd_selector s) {
                 for(int i = 0 ; i < s->max_fd; i++) {
                     if(FD_ISSET(i, &s->master_r)|| FD_ISSET(i, &s->master_w)) {
                         if(-1 == fcntl(i, F_GETFD, 0)) {
-                            fprintf(stderr, "Bad descriptor detected: %d\n", i);
+                            log_msg(LOG_ERROR, "Bad descriptor detected: %d\n", i);
                         }
                     }
                 }

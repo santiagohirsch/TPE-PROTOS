@@ -16,7 +16,7 @@ typedef struct state_machine {
 typedef int (*state_handler)(state_machine_ptr stm, session_ptr session, char *buffer, int bytes);
 
 static void str_to_upper(char * str) {
-    for (int i = 0; i < strlen(str); i++) {
+    for (size_t i = 0; i < strlen(str); i++) {
         str[i] = toupper(str[i]);
     }
 }

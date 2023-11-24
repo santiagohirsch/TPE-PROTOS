@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 
     if(sock < 0) {
         free(req);
-        log_msg(LOG_ERROR, "socket");
+        perror("[ERROR] socket");
         exit(1);
     }
 
@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
         free(req);
         close(sock);
-        log_msg(LOG_ERROR, "setsockopt");
+        perror("[ERROR] setsockopt");
         exit(1);
     }
 
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
     if (sent < 0) {
         free(req);
         close(sock);
-        log_msg(LOG_ERROR, "sendto");
+        perror("[ERROR] sendto");
         exit(1);
     } else if (sent != rq_buffer_len) {
         free(req);
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
     if (received < 0) {
         free(req);
         close(sock);
-        log_msg(LOG_ERROR, "recvfrom");
+        perror("[ERROR] recvfrom");
         exit(1);
     } else {
         rp_buffer[received] = '\0';
