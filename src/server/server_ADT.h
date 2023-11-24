@@ -47,4 +47,8 @@ int add_user(session_ptr session);
 
 int remove_user(session_ptr session);
 
+int set_max_concurrent_users(int max);
+
+int server_full();
+
 #endif

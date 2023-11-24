@@ -9,6 +9,7 @@
 #include "./utils/logger.h"
 #define BLOCK 5
 #define PORT 1110
+#define MAX_USERS 500
 
 typedef struct user_node {
     session_ptr session;
@@ -27,6 +28,7 @@ struct server {
     user_node * users;
     int user_session_count;
 
+    int max_concurrent_users;
     long transferred_bytes_count;
     int total_user_session_count;
     
@@ -165,6 +167,7 @@ struct server * init_server(int argc, char * argv[]) {
     server->users = NULL;
     server->user_session_count = 0;
     server->total_user_session_count = 0;
+    server->max_concurrent_users = MAX_USERS;
     server->fd_handler = malloc(sizeof(fd_handler));
     server->fd_handler->handle_close = close_server;
 
@@ -383,4 +386,16 @@ int remove_user(session_ptr session) {
 
 user_admin * get_admin() {
     return server->admin;
+}
+
+int set_max_concurrent_users(int max) {
+    if (server->max_concurrent_users > max) {
+        return -1;
+    }
+    server->max_concurrent_users = max;
+    return 0;
+}
+
+int server_full() {
+    return server->user_session_count == server->max_concurrent_users;
 }

@@ -41,7 +41,7 @@ int pass_cmd(session_ptr session, char *arg, int arg_len, char *response, bool *
     int username_len = get_username(session, username);
    
     if (username_len <= 0) {
-        log_msg(LOG_INFO, "Invalid username")   // TODO: CHECK if this is the correct error message or is vulnerable
+        log_msg(LOG_INFO, "Invalid username");   // TODO: CHECK if this is the correct error message or is vulnerable
 
         len = strlen("-ERR [AUTH] Authentication failed\r\n");
         strncpy(response, "-ERR [AUTH] Authentication failed\r\n", len);

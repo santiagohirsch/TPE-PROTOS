@@ -148,6 +148,11 @@ static int delete_handler(struct request *req, int argc, char *argv[])
         exit(1);
     }
 
+    if (strlen(argv[0]) > 32) {
+        fprintf(stderr, "Username too long\n");
+        exit(1);
+    }
+
     strcpy(req->command, "delete");
     strcpy(req->arg1, argv[0]);
     return 1;
