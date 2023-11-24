@@ -2,6 +2,8 @@
 #include "server_ADT.h"
 #include "./session/session.h"
 #include "pop3_constants.h"
+#include "./utils/logger.h"
+
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -13,6 +15,7 @@
 
 
 int user_cmd(session_ptr session, char *arg, int arg_len, char *response) {
+    log_msg(LOG_INFO, "user command");
 
     pop_action(session);
 
@@ -21,19 +24,25 @@ int user_cmd(session_ptr session, char *arg, int arg_len, char *response) {
     strncpy(response, "+OK\n", len);
     set_username(session, arg, arg_len);
 
+    log_msg(LOG_INFO, "User %s set", arg);
+
     return len;
 }
 
 // TODO: Check password
 int pass_cmd(session_ptr session, char *arg, int arg_len, char *response, bool *is_authenticated) {
+    log_msg(LOG_INFO, "pass command");
 
-    pop_action(session);
+    action_type action = pop_action(session);
+    log_msg(LOG_INFO, "action: %d", action);
 
     int len = 0;
     char username[USERNAME_MAX_LEN] = {0};
     int username_len = get_username(session, username);
    
     if (username_len <= 0) {
+        log_msg(LOG_INFO, "Invalid username")   // TODO: CHECK if this is the correct error message or is vulnerable
+
         len = strlen("-ERR [AUTH] Authentication failed\r\n");
         strncpy(response, "-ERR [AUTH] Authentication failed\r\n", len);
         *is_authenticated = false;
@@ -43,6 +52,8 @@ int pass_cmd(session_ptr session, char *arg, int arg_len, char *response, bool *
     struct user_dir * user_dir = get_user_dir(username, username_len);
 
     if (strcmp(user_dir->pass, arg) != 0) {
+        log_msg(LOG_INFO, "Invalid password");  // TODO: CHECK if this is the correct error message or is vulnerable
+
         len = strlen("-ERR [AUTH] Authentication failed\r\n");
         strncpy(response, "-ERR [AUTH] Authentication failed\r\n", len);
         return len;
@@ -59,13 +70,18 @@ int pass_cmd(session_ptr session, char *arg, int arg_len, char *response, bool *
 
     strncat(dir, username, username_len);
 
-    // TODO: chequeo de error
     DIR *dir_ptr = opendir(dir);
+
+    if (dir_ptr == NULL) {
+        log_msg(LOG_ERROR, "pass command: opendir error");
+        return -1;
+    }
 
     set_dir(session, dir_ptr);
 
     *is_authenticated = true;
 
+    log_msg(LOG_INFO, "User %s authenticated", username);
     return len;
 }
 
@@ -73,6 +89,7 @@ static ssize_t get_file_size(const char * mail, const char * file) {
     struct stat st;
     int mail_len = strlen(mail);
     int file_len = strlen(file);
+
     char * path = (char *) calloc(mail_len + file_len + 2, sizeof(char));
     strncpy(path, mail, mail_len);
     strcat(path, "/");
@@ -80,8 +97,8 @@ static ssize_t get_file_size(const char * mail, const char * file) {
 
     if(stat(path, &st) < 0) {
         free(path);
-        perror("stat error");
-        exit(1); //TODO error code
+        log_msg(LOG_ERROR, "stat error");
+        return -1;
     }
     free(path);
     return st.st_size;
@@ -90,67 +107,80 @@ static ssize_t get_file_size(const char * mail, const char * file) {
 static void get_file_stats(DIR * dir, const char * path, int * file_count, int * bytes, int * marked_mails) {
     struct dirent * entry;
     int i = 0;
-   while((entry = readdir(dir)) != NULL) {
-       if(entry->d_type == DT_REG) {
-            if(!marked_mails[i++]) {
-                *file_count += 1;
-                *bytes += get_file_size(path, entry->d_name);
-            }
-       }
-   }
+    while((entry = readdir(dir)) != NULL) {
+        if(entry->d_type == DT_REG) {
+                if(!marked_mails[i++]) {
+                    *file_count += 1;
+                    ssize_t size = get_file_size(path, entry->d_name);
+                    if (size < 0) {
+                        log_msg(LOG_ERROR, "get_file_size error");
+                        return;
+                    } else {
+                        *bytes += get_file_size(path, entry->d_name);
+                    }
+                }
+        }
+    }
 }
 
 int stat_cmd(session_ptr session, char * arg, int len, char * response) {
-   
-   pop_action(session);
+    log_msg(LOG_INFO, "stat command");
 
-   char username[USERNAME_MAX_LEN] = {0};
-   int username_len = get_username(session, username);
-   if (username_len < 0) {
-         perror("get username error");
-         exit(1); //TODO error code
-   } 
+    action_type action = pop_action(session);
+    log_msg(LOG_INFO, "action: %d", action);
 
-   char mail_dir[MAX_MAIL_PATH_LEN] = {0};
-   strcpy(mail_dir, get_root_dir());
-   strcat(mail_dir, "/");
-   strncat(mail_dir, username, username_len);
+    char username[USERNAME_MAX_LEN] = {0};
+    int username_len = get_username(session, username);
+    if (username_len < 0) {
+        log_msg(LOG_ERROR, "get_username error");
+        return -1;
+    } 
 
-   DIR * dir = opendir(mail_dir);
-   if(!dir) {
-        perror("opendir error");
-        exit(1); //TODO error code
-   }
+    char mail_dir[MAX_MAIL_PATH_LEN] = {0};
+    strcpy(mail_dir, get_root_dir());
+    strcat(mail_dir, "/");
+    strncat(mail_dir, username, username_len);
 
-   int file_count = 0;
-   int bytes = 0;
+    DIR * dir = opendir(mail_dir);
+    if(!dir) {
+        log_msg(LOG_ERROR, "stat command: opendir error");
+        return -1;
+    }
 
-   struct dirent * entry;
+    int file_count = 0;
+    int bytes = 0;
 
-   int * user_mails = get_dir_mails(session);
-   int i = 0;
+    struct dirent * entry;
 
-   while((entry = readdir(dir)) != NULL) {
-       if(entry->d_type == DT_REG) {
+    int * user_mails = get_dir_mails(session);
+
+    int i = 0;
+    while((entry = readdir(dir)) != NULL) {
+        if(entry->d_type == DT_REG) {
             if(!user_mails[i++]) {
                 file_count++;
                 bytes += get_file_size(mail_dir, entry->d_name);
+                log_msg(LOG_INFO, "entry: %s. size: %d", entry->d_name, bytes);
             }
-       }
+        }
     }
 
-   get_file_stats(dir, mail_dir, &file_count, &bytes,user_mails);
+    get_file_stats(dir, mail_dir, &file_count, &bytes,user_mails);
 
-   sprintf(response, "%d %d", file_count, bytes);
+    sprintf(response, "%d %d", file_count, bytes);
 
-   return strlen(response);
+    return strlen(response);
 }
 
 int dele_cmd(session_ptr session, char * arg, int len, char * response) {
+    log_msg(LOG_INFO, "dele command");
     
-    pop_action(session);
+    action_type action = pop_action(session);
+    log_msg(LOG_INFO, "action: %d", action);
     
     int status = mark_to_delete(session, atoi(arg));
+    log_msg(LOG_INFO, "dele status: %d", status);
+
     if (status < 0) {
         char aux[256] = {0};
         int aux_len = sprintf(aux, "-ERR There's no message %s\r\n", arg);
@@ -161,10 +191,13 @@ int dele_cmd(session_ptr session, char * arg, int len, char * response) {
 }
 
 int rset_cmd(session_ptr session, char * arg, int len, char * response) {
+    log_msg(LOG_INFO, "rset command");
     
-    pop_action(session);
+    action_type action = pop_action(session);
+    log_msg(LOG_INFO, "action: %d", action);
     
     reset_marks(session);
+
     return 0;
 }
 
@@ -186,8 +219,10 @@ static struct dirent * read_files(DIR * dir, long msg_num) {
 
 
 int list_cmd(session_ptr session, char * arg, int len, char * response, int bytes) {
-    
+    log_msg(LOG_INFO, "list command");
+
     action_type action = pop_action(session);
+    log_msg(LOG_INFO, "action: %d", action);
 
     DIR * dir = get_dir(session);
     long msg_num;
@@ -210,16 +245,17 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
         rewinddir(dir);
         entry = read_files(dir, msg_num);
 
-        if (msg_num < 1 || msg_num > get_dir_mails_count(session)) {
-            return sprintf(response, "-ERR There's no message %ld.\r\n", msg_num);
-        } else if (entry == NULL) {
+        if (msg_num < 1 || msg_num > get_dir_mails_count(session) || entry == NULL) {
+            log_msg(LOG_INFO, "There's no message %ld.", msg_num);
             return sprintf(response, "-ERR There's no message %ld.\r\n", msg_num);
         } else if (is_marked_to_delete(session, msg_num)) {
+            log_msg(LOG_INFO, "Message is deleted.");
             return sprintf(response, "-ERR Message is deleted.\r\n");
         }
 
         strcat(path, entry->d_name);
         stat(path, &st);
+        
         return sprintf(response, "+OK %ld %lld\r\n", msg_num, st.st_size);
     }
 
@@ -229,6 +265,7 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
 
 
     if (action == PROCESS) {
+        log_msg(LOG_INFO, "list command: process");
         rewinddir(dir);
         int count = 0;
         int bytes = 0;
@@ -274,6 +311,7 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
         set_dir(session, dir);
         set_user_dir_idx(session, idx);
         push_action(session, PROCESSING);
+        log_msg(LOG_INFO, "LIST, action pushed: %d", PROCESSING);
         return response_len;
     }
 
@@ -283,13 +321,17 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
         strncat(response, aux, current_line_len);
     } else {
         push_action(session, PROCESSING);
+        log_msg(LOG_INFO, "LIST, action pushed: %d", PROCESSING);
     }
 
+    log_msg(LOG_INFO, "LIST, response_len: %d", response_len);
     return response_len;
 }
 
 int quit_cmd (session_ptr session) {
     DIR * user_dir = get_dir(session);
+    log_msg(LOG_INFO, "quit command");
+
     rewinddir(user_dir);
 
     char path_to_mail[MAX_MAIL_PATH_LEN] = {0};
@@ -316,12 +358,16 @@ int quit_cmd (session_ptr session) {
             i++;
         }
     }
+    log_msg(LOG_INFO, "QUIT, mails deleted: %d", i);
 
     return 0;
 }
 
 int retr_cmd(session_ptr session, char * arg, int len, char * response, int bytes) {
+    log_msg(LOG_INFO, "retr command");
+
     action_type action = pop_action(session);
+    log_msg(LOG_INFO, "action: %d", action);
 
     if (len <= 1)
     {
@@ -345,11 +391,11 @@ int retr_cmd(session_ptr session, char * arg, int len, char * response, int byte
 
     entry = read_files(dir, msg_num);
 
-    if (msg_num < 1 || msg_num > get_dir_mails_count(session)) {
-        return sprintf(response, "-ERR There's no message %ld.\r\n", msg_num);
-    } else if (entry == NULL) {
+    if (msg_num < 1 || msg_num > get_dir_mails_count(session) || entry == NULL) {
+        log_msg(LOG_INFO, "There's no message %ld.", msg_num);
         return sprintf(response, "-ERR There's no message %ld.\r\n", msg_num);
     } else if (is_marked_to_delete(session, msg_num)) {
+        log_msg(LOG_INFO, "Message is deleted.");
         return sprintf(response, "-ERR Message is deleted.\r\n");
     }
 
@@ -360,8 +406,8 @@ int retr_cmd(session_ptr session, char * arg, int len, char * response, int byte
         strcat(path, entry->d_name);
         mail_retr_state->mail_fd = open(path, O_NONBLOCK);
         if (mail_retr_state->mail_fd < 0) {
-            perror("open error");
-            exit(1); //TODO error handle
+            log_msg(LOG_ERROR, "open error");
+            return -1;
         }
         resp_idx = strlen("+OK\r\n");
         strncpy(response, "+OK\r\n", resp_idx);
@@ -401,6 +447,7 @@ int retr_cmd(session_ptr session, char * arg, int len, char * response, int byte
             lseek(mail_retr_state->mail_fd, data_idx - read_bytes, SEEK_CUR);
         }
     }
+    log_msg(LOG_INFO, "RETR, read_bytes: %d", read_bytes);
     
     if (read_bytes == 0) {
         int multi_retr_len = strlen("\r\n.\r\n");
@@ -409,8 +456,10 @@ int retr_cmd(session_ptr session, char * arg, int len, char * response, int byte
             resp_idx += multi_retr_len;
         }
         close(mail_retr_state->mail_fd);
+        log_msg(LOG_INFO, "RETR, mail closed");
     } else {
         push_action(session, PROCESSING);
+        log_msg(LOG_INFO, "RETR, action pushed: %d", PROCESSING);
     }
 
     mail_retr_state->stuffed_byte = current_state;
