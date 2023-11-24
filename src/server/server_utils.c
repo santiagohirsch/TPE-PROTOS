@@ -143,6 +143,8 @@ int setup_udp_ipv6(int port) {
 
     int udp_socket = w_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
 
+    setsockopt(udp_socket, IPPROTO_IPV6, IPV6_V6ONLY, &(int){ 1 }, sizeof(int));
+
     w_bind(udp_socket, (struct sockaddr *) &sock_address, sizeof(sock_address));
 
     return udp_socket;
