@@ -120,6 +120,11 @@ static fd_selector new_fd_selector(int ipv4_socket, int ipv6_socket, fd_handler 
 
 void accept_passive_connection(struct selector_key *key){
     int socket_fd = accept_connection(key->fd);
+    if (server_full()) {
+        log_msg(LOG_INFO, "Connection with socket %d refused: server full", socket_fd);
+        close(socket_fd);
+        return;
+    }
     session_ptr session = new_session(socket_fd);
     add_user(session);
     selector_register(key->s, socket_fd, get_session_fd_handler(session), OP_WRITE, session);
