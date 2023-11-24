@@ -3,4 +3,4 @@
 
 static long id = 0;
 
-connection new_connection() { return id++; };
+connection new_connection() { return id++; }

@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "stm.h"
+#include "../utils/logger.h"
 #include "../pop3_constants.h"
 #include "../parser/command_parser.h"
 #include "../commands.h"
@@ -63,6 +64,7 @@ int auth(state_machine_ptr stm, session_ptr session, char *buffer, int bytes) {
         char * response = calloc(256, sizeof(char));
         len = sprintf(response, "-ERR Unknown command%s%s\r\n", strlen(event->command) > 0 ? ": " : ".", strlen(event->command) > 0 ? event->command : "");
         strcpy(buffer, response);
+        free(response);
     }
     return len;
 }
@@ -118,6 +120,7 @@ int transaction(state_machine_ptr stm, session_ptr session, char *buffer, int by
         len = sprintf(response, "-ERR Unknown command%s%s\r\n", strlen(event->command) > 0 ? ": " : ".", strlen(event->command) > 0 ? event->command : "");
         strcpy(buffer, response);
         stm->state = TRANSACTION;
+        free(response);
     }
     return len;
 }

@@ -141,7 +141,7 @@ int stat_cmd(session_ptr session, char * arg, int len, char * response) {
     strcat(mail_dir, "/");
     strncat(mail_dir, username, username_len);
 
-    DIR * dir = opendir(mail_dir);
+    DIR * dir = get_dir(session);
     if(!dir) {
         log_msg(LOG_ERROR, "stat command: opendir error");
         return -1;
@@ -256,7 +256,7 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
         strcat(path, entry->d_name);
         stat(path, &st);
         
-        return sprintf(response, "+OK %ld %lld\r\n", msg_num, st.st_size);
+        return sprintf(response, "+OK %ld %ld\r\n", msg_num, st.st_size);
     }
 
     int response_len = 0;
@@ -288,7 +288,7 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
             strcat(path, entry->d_name);
             stat(path, &st);
             if(!is_marked_to_delete(session,idx)) {
-                current_line_len = sprintf(aux, "%d %lld\r\n", idx, st.st_size);
+                current_line_len = sprintf(aux, "%d %ld\r\n", idx, st.st_size);
                 if (response_len + current_line_len < bytes) {
                     response_len += current_line_len;
                     strncat(response, aux, current_line_len);

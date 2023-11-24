@@ -28,8 +28,8 @@ static fd_selector new_fd_selector(int ipv4_socket, int ipv6_socket, fd_handler 
 int main(int argc, char *argv[]){
 
     // close stdin, stdout
-    // close(0);
-    // close(1);
+    close(0);
+    close(1);
 
     // handle signals
     signal(SIGINT, handle_signal);

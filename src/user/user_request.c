@@ -224,7 +224,7 @@ struct request * get_request(int argc, char * argv[]) {
 
     bool found = false;
     request_handler handler;
-    for (int i = 0; i < sizeof(options) / sizeof(struct option) && argc > 0 && !found; i++) {
+    for (long unsigned int i = 0; i < sizeof(options) / sizeof(struct option) && argc > 0 && !found; i++) {
         if (strcmp(argv[0], options[i].option) == 0) {
             found = true;
             handler = options[i].handler;
