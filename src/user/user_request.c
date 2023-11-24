@@ -27,8 +27,9 @@ static void help_handler()
     printf("\tcurrent\n");
     printf("\thistory\n");
     printf("\tbytes\n");
-    printf("\tpassword <user password>\n");
-    printf("\tdelete   <user>\n");
+    printf("\tpassword   <user password>\n");
+    printf("\tdelete     <user>\n");
+    printf("\tconcurrent <max_concurrent_users>\n");
 }
 
 static int auth_handler(struct request *req, int argc, char *argv[])
@@ -160,13 +161,21 @@ static int delete_handler(struct request *req, int argc, char *argv[])
 
 static int concurrent_handler(struct request *req, int argc, char *argv[])
 {
-    if (argc != 0) {
+    if (argc < 1) {
+        fprintf(stderr, "Invalid usage\n");
+        fprintf(stderr, "Missing arguments\n");
+        fprintf(stderr, "Usage: ./user concurrent <max_users>\n");
+        exit(1);
+    }
+
+    if (argc > 1) {
         fprintf(stderr, "Invalid usage\n");
         fprintf(stderr, "Too many arguments\n");
-        fprintf(stderr, "Usage: ./user concurrent\n");
+        fprintf(stderr, "Usage: ./user concurrent <max_users>\n");
         exit(1);
     }
     strcpy(req->command, "concurrent");
+    strcpy(req->arg1, argv[0]);
     return 1;
 }
 
@@ -214,20 +223,11 @@ struct request * get_request(int argc, char * argv[]) {
 
 
     bool found = false;
-    for (int i = 0; i < sizeof(options) / sizeof(struct option) && argc > 0; i++) {
+    request_handler handler;
+    for (int i = 0; i < sizeof(options) / sizeof(struct option) && argc > 0 && !found; i++) {
         if (strcmp(argv[0], options[i].option) == 0) {
             found = true;
-            int args = options[i].handler(req, argc - 1, argv + 1);
-            argc -= args;
-            argv += args;
-            if (argc != 0) {
-                free(req);
-                fprintf(stderr, "Invalid usage\n");
-                fprintf(stderr, "Too many arguments\n");
-                fprintf(stderr, "Usage: ./user -a <user:pass> COMMAND [ARGUMENT]...\n");
-                fprintf(stderr, "Try './user -h' for more information.\n");
-                exit(1);
-            }
+            handler = options[i].handler;
         }
     }
 
@@ -238,6 +238,10 @@ struct request * get_request(int argc, char * argv[]) {
         fprintf(stderr, "Usage: ./user -a <user:pass> COMMAND [ARGUMENT]...\n");
         fprintf(stderr, "Try './user -h' for more information.\n");
         exit(1);
+    } else {
+        argc--;
+        argv++;
+        handler(req, argc, argv);
     }
 
     req->id = 1;
