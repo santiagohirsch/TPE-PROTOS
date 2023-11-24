@@ -17,8 +17,11 @@
 static bool received_signal = false;
 
 static void handle_signal(int signal){
-    printf("\nsignal %d received\n", signal);
+    log_msg(LOG_INFO, "received signal: %d", signal);
     received_signal = true;
+
+    // QUIT 
+    
 }
 
 void accept_passive_connection(struct selector_key *key);

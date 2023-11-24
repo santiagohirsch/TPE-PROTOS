@@ -111,7 +111,7 @@ static int register_port(int argc, char *argv[]) {
 
 static int handle_user_option(int argc, char * argv[]) {
     if(argc == 0) {
-        fprintf(stderr, "user option requires an argument\n");
+        log_msg(LOG_ERROR, "user option requires an argument");
         close_server();
         return -1;
     }
@@ -119,7 +119,7 @@ static int handle_user_option(int argc, char * argv[]) {
     const char * delimeter = ":";
     char * username = strtok(argv[0], delimeter);
     if(username == NULL) {
-        fprintf(stderr, "user option requires an argument\n");
+        log_msg(LOG_ERROR, "user option requires an argument\n");
         close_server();
         return -1;
     }
@@ -135,12 +135,12 @@ static int handle_user_option(int argc, char * argv[]) {
     }
     char * password = strtok(NULL, delimeter);
     if(password == NULL) {
-        fprintf(stderr, "no password provided\n");
+        log_msg(LOG_ERROR, "no password provided\n");
         close_server();
         return -1;
     }
     if(strlen(password) > 15) {
-        fprintf(stderr, "password too long\n");
+        log_msg(LOG_ERROR, "password too long\n");
         close_server();
         return -1;
     }
@@ -155,8 +155,7 @@ struct server * init_server(int argc, char * argv[]) {
     }
     int port = PORT;
     if(argc <= 1) {
-        fprintf(stderr, "no root dir and users provided\n");
-        fprintf(stderr, "usage: ./main -d <root_dir> -u <user:pass> [-u <user:pass>]...\n");
+        log_msg(LOG_FATAL, "usage: ./main -d <root_dir> -u <user:pass> [-u <user:pass>]...\n");
         return NULL;
     }
 
