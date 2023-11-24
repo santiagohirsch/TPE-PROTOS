@@ -50,6 +50,8 @@ int parse_value(char *key, char *value, struct response *response, parser_state 
     if (strcmp(key, "value") == 0) {
         strcpy(response->message, value);
         *state = FINISHED;
+    } else if (strcmp(key, ".") == 0) {
+        *state = FINISHED;
     }
     else {
         *state = ERROR;
@@ -91,7 +93,7 @@ int parse_response(char *response_str, struct response *response) {
     char *svptr = response_str;
     char *line = strtok_r(response_str, delim, &svptr);
     char key_value[32];
-    char value[32];
+    char value[256];
 
     while (line != NULL && state != FINISHED) {
         if (parse_line(line, key_value, value)) {

@@ -89,8 +89,9 @@ int parse_arg2(char *key, char *value, struct udp_rqst *rqst, parser_state *stat
     if (strcmp(key, "arg2") == 0) {
         strcpy(rqst->arg2, value);
         *state = FINISHED;
-    }
-    else {
+    } else if(strcmp(key, ".") == 0) {
+        *state = FINISHED;
+    } else {
         *state = ERROR;
     }
     return 0;

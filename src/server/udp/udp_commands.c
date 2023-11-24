@@ -10,19 +10,19 @@ typedef void (*udp_command)(char * arg1, char * arg2, udp_resp * resp);
 
 void udp_get_bytes(char * arg1, char * arg2, udp_resp * resp) {
     unsigned long package_bytes = get_transferred_bytes_count();
-    snprintf(resp->value, 256, "%lu", package_bytes);
+    snprintf(resp->value, 256, "Transferred bytes: %lu", package_bytes);
     resp->code = OK;
 }
 
 void udp_get_current(char * arg1, char * arg2, udp_resp * resp) {
     int current_users = get_user_session_count();
-    snprintf(resp->value, 256, "%d", current_users);
+    snprintf(resp->value, 256, "Current users: %d", current_users);
     resp->code = OK;
 }
 
 void udp_get_history(char * arg1, char * arg2, udp_resp * resp) {
     int history = get_total_user_session_count();
-    snprintf(resp->value, 256, "%d", history);
+    snprintf(resp->value, 256, "Historic user count: %d", history);
     resp->code = OK;
 }
 
@@ -48,6 +48,7 @@ void udp_change_password(char * arg1, char * arg2, udp_resp * resp) {
     }
 
     strcpy(user->pass, password);
+    snprintf(resp->value, 256, "Changed password for user %s to %s", user->username, user->pass);
     resp->code = OK;
 }
 
@@ -71,6 +72,7 @@ void udp_delete_user(char * arg1, char * arg2, udp_resp * resp) {
     }
 
     if (delete_user_dir(username, strlen(username)) == 0) {
+        snprintf(resp->value, 256, "Deleted user: %s", username);
         resp->code = OK;
         user->deleted = true;
         return;
@@ -97,6 +99,7 @@ void udp_set_concurrent(char * arg1, char * arg2, udp_resp * resp) {
         return;
     }
    
+    snprintf(resp->value, 256, "Set max concurrent users to: %d", concurrent);
     resp->code = OK;
 }
 

@@ -29,7 +29,7 @@ int main(int argc, char *argv[]){
 
     // close stdin, stdout
     close(0);
-    // close(1);
+    close(1);
 
     // handle signals
     signal(SIGINT, handle_signal);
