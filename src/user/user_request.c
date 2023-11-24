@@ -281,5 +281,5 @@ void build_request(struct request * req, char * buf) {
         strcat(buf, req->arg2);
         strcat(buf, "\r\n");
     }
-    strcat(buf, "\r\n");
+    strcat(buf, ".\r\n");
 }

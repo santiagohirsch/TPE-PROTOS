@@ -67,10 +67,9 @@ int main(int argc, char *argv[])
         exit(1);
     } else {
         rp_buffer[received] = '\0';
-        printf("Response: %s\n", rp_buffer);
     }
 
-    struct response * resp = malloc(sizeof(struct response));
+    struct response * resp = calloc(1, sizeof(struct response));
     if (parse_response(rp_buffer, resp) < 0) {
         free(req);
         free(resp);
@@ -81,16 +80,19 @@ int main(int argc, char *argv[])
 
     switch(resp->status) {
         case 20:
-            printf("%s\n", resp->message);
+            printf("OK\n");
+            if (resp->message[0] != '\0') {
+                printf("%s\n", resp->message);
+            }
             break;
         case 40:
-            printf("Client error\n");
+            printf("User error\n");
             break;
         case 41:
-            printf("Client error: unauthorized\n");
+            printf("User error: unauthorized\n");
             break;
         case 42:
-            printf("Client error: user does not exist\n");
+            printf("User error: user does not exist\n");
             break;
         case 50:
             printf("Server error\n");

@@ -22,20 +22,24 @@ void udp_read(struct selector_key *key) {
         exit(1);
     }
 
-    udp_rqst *udp_request = malloc(sizeof(udp_rqst));
+    udp_rqst *udp_request = calloc(1, sizeof(udp_rqst));
 
     if (udp_parse_request(read_buffer, udp_request) < 0) {
         log_msg(LOG_ERROR, "udp_parse_request");
         exit(1);
     }
 
-    // printf("UDP request received:\n");
-    // printf("username: %s\n", udp_request->username);
-    // printf("password: %s\n", udp_request->password);
-    // printf("id: %d\n", udp_request->id);
-    // printf("command: %s\n", udp_request->command);
-    // printf("arg1: %s\n", udp_request->arg1);
-    // printf("arg2: %s\n", udp_request->arg2);
+    printf("UDP request received:\n");
+    printf("username: %s\n", udp_request->username);
+    printf("password: %s\n", udp_request->password);
+    printf("id: %d\n", udp_request->id);
+    printf("command: %s\n", udp_request->command);
+    if (udp_request->arg1[0] != '\0') {
+        printf("arg1: %s\n", udp_request->arg1);
+    }
+    if (udp_request->arg2[0] != '\0') {
+        printf("arg2: %s\n", udp_request->arg2);
+    }
 
     udp_resp *udp_response = calloc(1, sizeof(udp_resp));
 
@@ -47,8 +51,7 @@ void udp_read(struct selector_key *key) {
     handle_request(udp_request, udp_response);
 
     char aux[MAX_BYTES_TO_READ];
-    int aux_bytes = snprintf(aux, MAX_BYTES_TO_READ, "protocol\r\nrequest_id: %d\r\nstatus_code: %d\r\n", udp_response->rqst_id, udp_response->code);
-
+    int aux_bytes = snprintf(aux, MAX_BYTES_TO_READ, "user protocol\r\nrequest_id: %d\r\nstatus_code: %d\r\n", udp_response->rqst_id, udp_response->code);
     if (udp_response->value[0] != '\0') {
         aux_bytes += snprintf(aux + aux_bytes, MAX_BYTES_TO_READ - aux_bytes, "value: %s\r\n", udp_response->value);
     }
