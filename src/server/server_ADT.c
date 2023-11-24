@@ -359,6 +359,7 @@ int remove_user(session_ptr session) {
 
     if (current == NULL && prev->session == session) {
         server->users = NULL;
+        server->user_session_count--;
         free(prev);
         return 0;
     }
