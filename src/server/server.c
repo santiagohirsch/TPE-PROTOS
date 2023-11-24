@@ -28,14 +28,15 @@ static fd_selector new_fd_selector(int ipv4_socket, int ipv6_socket, fd_handler 
 int main(int argc, char *argv[]){
 
     // close stdin, stdout
-    close(0);
-    close(1);
+    // close(0);
+    // close(1);
 
     // handle signals
     signal(SIGINT, handle_signal);
     signal(SIGTERM, handle_signal);
 
     // setup server
+    init_udp();
     /*server_t server = */init_server(argc, argv);
     int server_ipv4_sock = get_server_ipv4_socket();
     log_msg(LOG_INFO, "server ipv4 socket: %d", server_ipv4_sock);
@@ -50,7 +51,7 @@ int main(int argc, char *argv[]){
     log_msg(LOG_INFO, "server initialization complete");
 
     // setup udp
-    /*udp_ADT udp_server = */init_udp();
+    /*udp_ADT udp_server = */
     int udp_sock = get_udp_socket();
     log_msg(LOG_INFO, "got udp socket: %d", udp_sock);
 
