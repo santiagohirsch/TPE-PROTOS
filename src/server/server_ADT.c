@@ -261,7 +261,7 @@ int get_server_ipv6_socket() {
 
 struct user_dir * get_user_dir(char * username, int len) {
     for(int i = 0; i < server->user_count; i++) {
-        if(strncmp(server->users_dirs[i]->username, username,len) == 0) {
+        if(strncmp(server->users_dirs[i]->username, username,len) == 0 && !server->users_dirs[i]->deleted) {
 
             return server->users_dirs[i];
         }
@@ -410,4 +410,65 @@ int set_max_concurrent_users(int max) {
 
 int server_full() {
     return server->user_session_count == server->max_concurrent_users;
+}
+
+static int get_file_count(DIR * dir) {
+    int count = 0;
+    struct dirent * entry;
+    while((entry = readdir(dir)) != NULL) {
+        if (entry->d_type == DT_REG) {
+            count++;
+        }
+    }
+    return count;
+}
+
+static void delete_files(DIR * dir, char * path) {
+    struct dirent * entry;
+    while((entry = readdir(dir)) != NULL) {
+        if (entry->d_type == DT_REG) {
+            char file_path[MAX_MAIL_PATH_LEN] = {0};
+            strcpy(file_path, path);
+            strcat(file_path, "/");
+            strncat(file_path, entry->d_name, strlen(entry->d_name));
+            if (remove(file_path) == 0) {
+                log_msg(LOG_INFO, "Deleted file: %s", file_path);
+            }
+        }
+    }
+}
+
+int delete_user_dir(char * username, int len) {
+    char *path = get_root_dir();
+    DIR * dir = opendir(path);
+    int ret = 0;
+
+    struct dirent * entry;
+    while((entry = readdir(dir)) != NULL) {
+        if (entry->d_type == DT_DIR) {
+            if (strcmp(entry->d_name, username) == 0) {
+                char user_path[MAX_MAIL_PATH_LEN] = {0};
+                strcpy(user_path, path);
+                strcat(user_path, "/");
+                strncat(user_path, username, len);
+                DIR * user_dir = opendir(user_path);
+                if (user_dir != NULL) {
+                    delete_files(user_dir, user_path);
+                    if (rmdir(user_path) == 0) {
+                        log_msg(LOG_INFO, "Deleted directory: %s", user_path);
+                    }
+
+                    if (get_file_count(user_dir) == 0) {
+                        ret = 0;
+                    } else {
+                        ret = 1;
+                    }
+                    closedir(user_dir);
+                }
+                break;
+            }
+        }
+    }
+    closedir(dir);
+    return ret;
 }

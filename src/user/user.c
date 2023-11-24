@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../server/utils/logger.h"
 
 
 #define UDP_PORT 5000
@@ -24,7 +25,7 @@ int main(int argc, char *argv[])
 
     if(sock < 0) {
         free(req);
-        log_msg(LOG_ERROR, "socket");
+        // log_msg(LOG_ERROR, "socket");
         exit(1);
     }
 
@@ -41,7 +42,7 @@ int main(int argc, char *argv[])
     if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
         free(req);
         close(sock);
-        log_msg(LOG_ERROR, "setsockopt");
+        // log_msg(LOG_ERROR, "setsockopt");
         exit(1);
     }
 
@@ -49,7 +50,7 @@ int main(int argc, char *argv[])
     if (sent < 0) {
         free(req);
         close(sock);
-        log_msg(LOG_ERROR, "sendto");
+        // log_msg(LOG_ERROR, "sendto");
         exit(1);
     } else if (sent != rq_buffer_len) {
         free(req);
@@ -62,7 +63,7 @@ int main(int argc, char *argv[])
     if (received < 0) {
         free(req);
         close(sock);
-        log_msg(LOG_ERROR, "recvfrom");
+        // log_msg(LOG_ERROR, "recvfrom");
         exit(1);
     } else {
         rp_buffer[received] = '\0';
