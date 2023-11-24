@@ -104,17 +104,17 @@ int main(int argc, char *argv[]){
 static fd_selector new_fd_selector(int ipv4_socket, int ipv6_socket, fd_handler *handler, struct selector_init *conf){
     int ret = selector_init(conf);
     if(ret != 0){
-        perror("selector_init");
+        log_msg(LOG_ERROR, "selector_init");
         exit(1);    // TODO: handle this error with logs
     }
 
     if (selector_fd_set_nio(ipv4_socket) == -1) {
-        perror("selector_fd_set_nio");
+        log_msg(LOG_ERROR, "selector_fd_set_nio");
         exit(1);
     }
 
     if (selector_fd_set_nio(ipv6_socket) == -1) {
-        perror("selector_fd_set_nio");
+        log_msg(LOG_ERROR, "selector_fd_set_nio");
         exit(1);
     }
 
