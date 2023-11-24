@@ -56,7 +56,9 @@ int main(int argc, char *argv[]){
 
     //set_udp_fd_handler(&handle_udp_read, &handle_udp_write);
     set_udp_fd_handler(&udp_read, NULL);
-    struct fd_handler *udp_handler = get_udp_fd_handler();
+    struct fd_handler *udp_handler = malloc(sizeof(fd_handler));
+
+    memcpy((void *)udp_handler, get_udp_fd_handler(), sizeof(fd_handler));
 
     log_msg(LOG_INFO, "udp initialization complete");
 
@@ -87,6 +89,7 @@ int main(int argc, char *argv[]){
     // cleanup
     selector_destroy(fd_selector);
     free(server_handler);
+    free(udp_handler);
 
     log_msg(LOG_INFO, "server shutting down");
     return 0;

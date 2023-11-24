@@ -2,6 +2,7 @@
 #include <string.h>
 #include "../server_utils.h"
 #include <stdlib.h>
+#include <unistd.h>
 
 #define UPD_PORT 5000
 #define CREDENTIALS 2
@@ -25,6 +26,7 @@ udp_ADT init_udp() {
         udp_server->credentials[USERNAME] = calloc(MAX_USER_LEN, sizeof(char));
         udp_server->credentials[PASSWORD] = calloc(MAX_PASS_LEN, sizeof(char));
         udp_server->fd_handler = malloc(sizeof(fd_handler));
+        udp_server->fd_handler->handle_close = close_udp_fd_handler;
     }
     return udp_server;
 }
@@ -44,4 +46,16 @@ fd_handler * get_udp_fd_handler() {
 void set_udp_fd_handler(void (*handle_read)(struct selector_key * key), void (*handle_write)(struct selector_key * key)) {
     udp_server->fd_handler->handle_read = handle_read;
     udp_server->fd_handler->handle_write = handle_write;
+}
+
+void close_udp() {
+    if (udp_server != NULL) {
+        close(udp_server->socket);
+        free(udp_server->fd_handler);
+        free(udp_server);
+    }
+}
+
+void close_udp_fd_handler(struct selector_key * key) {
+    close_udp();
 }
