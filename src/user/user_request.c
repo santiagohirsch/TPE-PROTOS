@@ -22,12 +22,12 @@ struct option {
 
 static void help_handler()
 {
-    printf("Usage: ./user -a <user:pass> COMMAND [ARGUMENT]...\n");
+    printf("Usage: ./user -a <user>:<pass> COMMAND [ARGUMENT]...\n");
     printf("Commands:\n");
     printf("\tcurrent\n");
     printf("\thistory\n");
     printf("\tbytes\n");
-    printf("\tpassword   <user password>\n");
+    printf("\tpassword   <user> <password>\n");
     printf("\tdelete     <user>\n");
     printf("\tconcurrent <max_concurrent_users>\n");
 }
