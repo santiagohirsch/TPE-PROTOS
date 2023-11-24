@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../server/utils/logger.h"
 
 
 #define UDP_PORT 5000

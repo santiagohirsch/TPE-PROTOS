@@ -174,6 +174,14 @@ static int concurrent_handler(struct request *req, int argc, char *argv[])
         fprintf(stderr, "Usage: ./user concurrent <max_users>\n");
         exit(1);
     }
+
+    int max_users = atoi(argv[0]);
+    if (max_users < 1 || max_users > 1000) {
+        fprintf(stderr, "Invalid argument\n");
+        fprintf(stderr, "Max users must be between 1 and 1000\n");
+        exit(1);
+    }
+
     strcpy(req->command, "concurrent");
     strcpy(req->arg1, argv[0]);
     return 1;

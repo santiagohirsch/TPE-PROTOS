@@ -29,13 +29,13 @@ void udp_read(struct selector_key *key) {
         exit(1);
     }
 
-    printf("UDP request received:\n");
-    printf("username: %s\n", udp_request->username);
-    printf("password: %s\n", udp_request->password);
-    printf("id: %d\n", udp_request->id);
-    printf("command: %s\n", udp_request->command);
-    printf("arg1: %s\n", udp_request->arg1);
-    printf("arg2: %s\n", udp_request->arg2);
+    // printf("UDP request received:\n");
+    // printf("username: %s\n", udp_request->username);
+    // printf("password: %s\n", udp_request->password);
+    // printf("id: %d\n", udp_request->id);
+    // printf("command: %s\n", udp_request->command);
+    // printf("arg1: %s\n", udp_request->arg1);
+    // printf("arg2: %s\n", udp_request->arg2);
 
     udp_resp *udp_response = calloc(1, sizeof(udp_resp));
 

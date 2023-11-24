@@ -65,7 +65,19 @@ void udp_delete_user(char * arg1, char * arg2, udp_resp * resp) {
         return;
     }
 
-    resp->code = OK;   
+    if (user->deleted) {
+        resp->code = SERVER_ERROR;
+        return;
+    }
+
+    if (delete_user_dir(username, strlen(username)) == 0) {
+        resp->code = OK;
+        user->deleted = true;
+        return;
+    }
+
+    resp->code = SERVER_ERROR;
+
 }
 
 void udp_set_concurrent(char * arg1, char * arg2, udp_resp * resp) {

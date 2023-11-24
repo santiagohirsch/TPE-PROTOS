@@ -9,7 +9,7 @@ typedef struct server *server_t;
 struct user_dir {
     char username[USERNAME_MAX_LEN];
     char pass[16];
-    bool is_open;
+    bool deleted;
 };
 
 int get_server_ipv4_socket();
@@ -43,5 +43,7 @@ int remove_user(session_ptr session);
 int set_max_concurrent_users(int max);
 
 int server_full();
+
+int delete_user_dir(char * username, int len);
 
 #endif
