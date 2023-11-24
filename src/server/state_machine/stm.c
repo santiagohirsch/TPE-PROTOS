@@ -117,7 +117,6 @@ int transaction(state_machine_ptr stm, session_ptr session, char *buffer, int by
     } else {
         pop_action(session);
         char * response = calloc(256, sizeof(char));
-        log_msg(LOG_DEBUG, "calloc");
         len = sprintf(response, "-ERR Unknown command%s%s\r\n", strlen(event->command) > 0 ? ": " : ".", strlen(event->command) > 0 ? event->command : "");
         strcpy(buffer, response);
         stm->state = TRANSACTION;

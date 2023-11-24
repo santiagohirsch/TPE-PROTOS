@@ -22,7 +22,6 @@ stack_adt new_stack() {
 // TODO: add wrapper functions for malloc
 void push(stack_adt stack, data_t elem) {
     node * new_node = malloc(sizeof(node));
-    log_msg(LOG_DEBUG, "malloc'd");
     // CHECK MALLOC
     new_node->elem = elem;
     new_node->next = stack->first;
