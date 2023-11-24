@@ -141,7 +141,8 @@ int stat_cmd(session_ptr session, char * arg, int len, char * response) {
     strcat(mail_dir, "/");
     strncat(mail_dir, username, username_len);
 
-    DIR * dir = opendir(mail_dir);
+    DIR * dir = get_dir(session);
+    log_msg(LOG_DEBUG, "opendir");
     if(!dir) {
         log_msg(LOG_ERROR, "stat command: opendir error");
         return -1;
