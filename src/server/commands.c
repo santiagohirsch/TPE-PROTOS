@@ -19,7 +19,16 @@ int user_cmd(session_ptr session, char *arg, int arg_len, char *response) {
 
     pop_action(session);
 
+    struct user_dir * user_dir = get_user_dir(arg, arg_len);
+
     int len = strlen("+OK\n");
+
+    if (user_dir == NULL) {
+        log_msg(LOG_INFO, "Invalid username");
+
+        return len;
+    }
+
 
     strncpy(response, "+OK\n", len);
     set_username(session, arg, arg_len);
