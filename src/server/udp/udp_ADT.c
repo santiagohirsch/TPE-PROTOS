@@ -28,7 +28,7 @@ struct udp * udp_server = NULL;
 
 udp_ADT init_udp() {
     if (udp_server == NULL) {
-        udp_server = malloc(sizeof(struct udp));
+        udp_server = calloc(1, sizeof(struct udp));
         udp_server->socket = setup_udp_ipv4(UPD_PORT);
         udp_server->fd_handler = malloc(sizeof(fd_handler));
         udp_server->fd_handler->handle_close = close_udp_fd_handler;
