@@ -52,8 +52,11 @@ int main(int argc, char *argv[]){
 
     // setup udp
     /*udp_ADT udp_server = */
-    int udp_sock = get_udp_socket();
-    log_msg(LOG_INFO, "got udp socket: %d", udp_sock);
+    int udp_ipv4_sock = get_udp_ipv4_socket();
+    log_msg(LOG_INFO, "got udp ipv4 socket: %d", udp_ipv4_sock);
+
+    int udp_ipv6_sock = get_udp_ipv6_socket();
+    log_msg(LOG_INFO, "got udp ipv6 socket: %d", udp_ipv6_sock);
 
     //set_udp_fd_handler(&handle_udp_read, &handle_udp_write);
     set_udp_fd_handler(&udp_read, NULL);
@@ -76,8 +79,10 @@ int main(int argc, char *argv[]){
     fd_selector fd_selector = new_fd_selector(server_ipv4_sock, server_ipv6_sock, server_handler, &conf);
 
     // register selectors
-    selector_register(fd_selector, udp_sock, udp_handler, OP_READ, NULL);
+    selector_register(fd_selector, udp_ipv4_sock, udp_handler, OP_READ, NULL);
+    selector_register(fd_selector, udp_ipv6_sock, udp_handler, OP_READ, NULL);
     selector_register(fd_selector, server_ipv4_sock, server_handler, OP_READ, NULL);
+    selector_register(fd_selector, server_ipv6_sock, server_handler, OP_READ, NULL);
 
     log_msg(LOG_INFO, "selector initialization complete");
 
