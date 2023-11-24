@@ -12,6 +12,13 @@ struct user_dir {
     bool is_open;
 };
 
+typedef struct user_admin {
+    char username[USERNAME_MAX_LEN];
+    char pass[16];
+} user_admin;
+
+user_admin * get_admin();
+
 int get_server_ipv4_socket();
 
 int get_server_ipv6_socket();

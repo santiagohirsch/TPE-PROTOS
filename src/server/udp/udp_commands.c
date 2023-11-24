@@ -78,16 +78,30 @@ udp_command get_udp_command(char * command) {
     return NULL;
 }
 
-void handle_request(udp_rqst * req, udp_resp * resp) {
-    udp_command command = get_udp_command(req->command);
+static bool is_auth(udp_rqst * req, udp_resp * resp) {
+    user_admin * admin = get_admin();
+    if (strcmp(req->username, admin->username) == 0 && strcmp(req->password, admin->pass) == 0) {
+        return true;
+    } 
+    resp->code = CLIENT_ERROR_UNAUTHORIZED;
+    return false;
+}
 
-    if (command == NULL) {
-        resp->code = 1;
-        snprintf(resp->value, 256, "Command not found");
-        return;
+void handle_request(udp_rqst * req, udp_resp * resp) {
+
+    if (is_auth(req, resp)) {
+        udp_command command = get_udp_command(req->command);
+
+        if (command == NULL) {
+            resp->code = 1;
+            snprintf(resp->value, 256, "Command not found");
+            return;
+        }
+        command(req->arg1, req->arg2, resp);
     }
+    
 
     resp->rqst_id = req->id;
-    command(req->arg1, req->arg2, resp);
+    
 }
 
