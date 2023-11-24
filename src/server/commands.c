@@ -431,7 +431,7 @@ int retr_cmd(session_ptr session, char * arg, int len, char * response, int byte
         int data_idx = 0;
         mail[read_bytes] = '\0';
 
-        for (; data_idx < read_bytes; data_idx++) {
+        for (; data_idx < read_bytes && resp_idx < bytes; data_idx++) {
             if (current_state == CR) {
                 if (mail[data_idx] == '\n') {
                     current_state = LF;
