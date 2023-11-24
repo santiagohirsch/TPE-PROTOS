@@ -43,8 +43,7 @@ static int users_registered = 0;
 static void init_users_dirs(char * root_dir) {
     DIR * dir = opendir(root_dir);
     if(dir == NULL) {
-        perror("opendir error");
-        exit(1);
+        log_msg(LOG_FATAL, "opendir error");
     }
 
     server->root_dir = root_dir;

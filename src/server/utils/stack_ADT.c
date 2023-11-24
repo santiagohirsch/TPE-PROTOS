@@ -1,4 +1,5 @@
 #include "stack_ADT.h"
+#include "logger.h"
 #include <stdlib.h>
 
 typedef struct node {
@@ -34,6 +35,7 @@ int pop(stack_adt stack, data_t * elem) {
     }
     *elem = first->elem;
     stack->first = first->next;
+    free(first);
     return 0;
 }
 

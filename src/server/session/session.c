@@ -257,7 +257,7 @@ fd_handler * get_session_fd_handler(session_ptr session) {
 action_type pop_action(session_ptr session) {
     data_t action;
     int ret = pop(session->actions, &action);
-    return ret == -1 ? ret : action.elem;
+    return ret == -1 ? ERR : action.elem;   // TODO: check the return type
 }
 
 void push_action(session_ptr session, action_type action) {
@@ -269,7 +269,7 @@ void push_action(session_ptr session, action_type action) {
 action_type peek_action(session_ptr session) {
     data_t action;
     int ret = peek(session->actions, &action);
-    return ret == -1 ? ret : action.elem;
+    return ret == -1 ? ERR : action.elem;   // TODO: check the return type
 }
 
 int get_user_dir_idx(session_ptr session) {

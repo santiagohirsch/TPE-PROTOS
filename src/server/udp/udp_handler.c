@@ -17,14 +17,14 @@ void udp_read(struct selector_key *key) {
     ssize_t read_bytes = recvfrom(key->fd, read_buffer, MAX_BYTES_TO_READ, 0, (struct sockaddr *) &client_addr, &client_addr_len);
 
     if (read_bytes < 0) {
-        perror("recvfrom");
+        log_msg(LOG_ERROR, "recvfrom");
         exit(1);
     }
 
     udp_rqst *udp_request = malloc(sizeof(udp_rqst));
 
     if (udp_parse_request(read_buffer, udp_request) < 0) {
-        perror("udp_parse_request");
+        log_msg(LOG_ERROR, "udp_parse_request");
         exit(1);
     }
 
@@ -39,7 +39,7 @@ void udp_read(struct selector_key *key) {
     udp_resp *udp_response = calloc(1, sizeof(udp_resp));
 
     if (udp_response == NULL) {
-        perror("malloc"); // TODO: LOGGER
+        log_msg(LOG_ERROR, "malloc");
         exit(1);
     }
 

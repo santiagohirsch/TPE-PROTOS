@@ -7,14 +7,16 @@
 #include "./state_machine/stm.h"
 #include "./parser/command_parser.h"
 #include "./session/session.h"
+#include "./utils/logger.h"
 
 
-//TODO: Agregar codigos de error al .h
+// TODO: Agregar codigos de error al .h
+//      Realizar manejo de errores, no está bien que el programa termine
 
 int w_socket(int domain, int type, int protocol){
     int ret = socket(domain, type, protocol);
     if(ret < 0){
-        perror("error creating socket");
+        log_msg(LOG_ERROR, "error creating socket");
         exit(1);
     }
     return ret;
@@ -23,7 +25,7 @@ int w_socket(int domain, int type, int protocol){
 int w_bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen){
     int ret = bind(sockfd, addr, addrlen);
     if(ret < 0){
-        perror("error binding socket");
+        log_msg(LOG_ERROR, "error binding socket");
         exit(1);
     }
     return ret;
@@ -32,7 +34,7 @@ int w_bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen){
 int w_listen(int sockfd, int backlog){
     int ret = listen(sockfd, backlog);
     if(ret < 0){
-        perror("error listening socket");
+        log_msg(LOG_ERROR, "error listening socket");
         exit(1);
     }
     return ret;
@@ -43,7 +45,7 @@ int w_accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen){
     int ret = accept(sockfd, addr, addrlen);
 
     if(ret < 0){
-        perror("error accepting socket");
+        log_msg(LOG_ERROR, "error accepting socket");
         exit(1);
     }
     return ret;
@@ -52,7 +54,7 @@ int w_accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen){
 int w_recv(int sockfd, void *buf, size_t len, int flags){
     int ret = recv(sockfd, buf, len, flags);
     if(ret < 0){
-        perror("error receiving socket");
+        log_msg(LOG_ERROR, "error receiving socket");
         exit(1);
     }
     return ret;
@@ -61,7 +63,7 @@ int w_recv(int sockfd, void *buf, size_t len, int flags){
 int w_send(int sockfd, const void *buf, size_t len, int flags){
     int ret = send(sockfd, buf, len, flags);
     if(ret < 0){
-        perror("error sending socket");
+        log_msg(LOG_ERROR, "error sending socket");
         exit(1);
     }
     return ret;

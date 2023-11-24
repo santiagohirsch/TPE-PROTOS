@@ -82,7 +82,7 @@ struct parser * command_parser_init() {
 }
 
 struct parser_event * get_command(struct parser_event * event, struct parser * p, char * buffer, size_t bytes, size_t * bytes_read) {
-    int i;
+    size_t i;
     for(i = 0; i < bytes && event->type == MAYEQ; i++) {
         event = parser_feed(p, buffer[i]);
     }
