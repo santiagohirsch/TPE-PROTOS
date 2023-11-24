@@ -11,11 +11,18 @@
 #define MAX_USER_LEN 32
 #define MAX_PASS_LEN 32
 
+typedef struct user_admin {
+    char username[MAX_USER_LEN];
+    char pass[16];
+} user_admin;
+
 struct udp {
     int socket;
-    char *credentials[CREDENTIALS];
+    user_admin admin;
     struct fd_handler *fd_handler;
 };
+
+
 
 struct udp * udp_server = NULL;
 
@@ -23,8 +30,6 @@ udp_ADT init_udp() {
     if (udp_server == NULL) {
         udp_server = malloc(sizeof(struct udp));
         udp_server->socket = setup_udp_ipv4(UPD_PORT);
-        udp_server->credentials[USERNAME] = calloc(MAX_USER_LEN, sizeof(char));
-        udp_server->credentials[PASSWORD] = calloc(MAX_PASS_LEN, sizeof(char));
         udp_server->fd_handler = malloc(sizeof(fd_handler));
         udp_server->fd_handler->handle_close = close_udp_fd_handler;
     }
@@ -35,8 +40,13 @@ int get_udp_socket() {
     return udp_server->socket;
 }
 
-int validate_credentials(const char * username, const char * password) {
-    return strcmp(udp_server->credentials[USERNAME], username) == 0 && strcmp(udp_server->credentials[PASSWORD], password) == 0;
+void set_admin(char * username, char * password) {
+    strcpy(udp_server->admin.username, username);
+    strcpy(udp_server->admin.pass, password);
+}
+
+bool validate_credentials(const char * username, const char * password) {
+    return strcmp(udp_server->admin.username, username) == 0 && strcmp(udp_server->admin.pass, password) == 0;
 }
 
 fd_handler * get_udp_fd_handler() {

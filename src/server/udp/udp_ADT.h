@@ -9,7 +9,9 @@ udp_ADT init_udp();
 
 int get_udp_socket();
 
-int validate_credentials(const char * username, const char * password);
+void set_admin(char * username, char * password);
+
+bool validate_credentials(const char * username, const char * password);
 
 fd_handler * get_udp_fd_handler();
 

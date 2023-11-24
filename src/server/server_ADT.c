@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include "./utils/logger.h"
+#include "./udp/udp_ADT.h"
 #define BLOCK 5
 #define PORT 1110
 #define MAX_USERS 500
@@ -33,8 +34,6 @@ struct server {
     int total_user_session_count;
     
     struct fd_handler * fd_handler;
-
-    user_admin * admin;
 };
 
 struct server * server = NULL;
@@ -79,7 +78,6 @@ static void register_admin(int argc, char *argv[]) {
     if (argc == 0) {
         log_msg(LOG_FATAL, "-a: Usage: -a <username:password>");
     }
-    server->admin = calloc(1, sizeof(user_admin));
     char * username = strtok(argv[0], ":");
     if (username == NULL) {
         log_msg(LOG_FATAL, "-a: Usage: -a <username:password>");
@@ -87,7 +85,6 @@ static void register_admin(int argc, char *argv[]) {
     if (strlen(username) > 15) {
         log_msg(LOG_FATAL, "-a: username too long");
     }
-    strcpy(server->admin->username, username);
     char * password = strtok(NULL, ":");
     if (password == NULL) {
         log_msg(LOG_FATAL, "-a: Usage: -a <username:password>");
@@ -95,7 +92,7 @@ static void register_admin(int argc, char *argv[]) {
     if (strlen(password) > 15) {
         log_msg(LOG_FATAL, "-a: password too long");
     }
-    strcpy(server->admin->pass, password);
+    set_admin(username, password);
 }
 
 static int handle_user_option(int argc, char * argv[]) {
@@ -275,9 +272,6 @@ void close_server() {
     close(server->ipv4_socket);
     close(server->ipv6_socket);
     free_users();
-    if (server->admin != NULL) {
-        free(server->admin);
-    }
     if (server->users_dirs != NULL) {
         free_users_dirs();
     }
@@ -382,10 +376,6 @@ int remove_user(session_ptr session) {
     }
     return -1;
     
-}
-
-user_admin * get_admin() {
-    return server->admin;
 }
 
 int set_max_concurrent_users(int max) {

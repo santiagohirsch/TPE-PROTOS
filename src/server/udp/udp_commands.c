@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include "udp_ADT.h"
 
 typedef void (*udp_command)(char * arg1, char * arg2, udp_resp * resp);
 
@@ -113,8 +114,8 @@ udp_command get_udp_command(char * command) {
 }
 
 static bool is_auth(udp_rqst * req, udp_resp * resp) {
-    user_admin * admin = get_admin();
-    if (strcmp(req->username, admin->username) == 0 && strcmp(req->password, admin->pass) == 0) {
+    
+    if (validate_credentials(req->username, req->password)) {
         return true;
     } 
     resp->code = CLIENT_ERROR_UNAUTHORIZED;
