@@ -131,3 +131,17 @@ int setup_udp_ipv4(int port) {
 
     return udp_socket;
 }
+
+int setup_udp_ipv6(int port) {
+    struct sockaddr_in6 sock_address;
+    memset(&sock_address, 0, sizeof(sock_address));
+    sock_address.sin6_family = AF_INET6;
+    sock_address.sin6_addr = in6addr_any;
+    sock_address.sin6_port = htons(port);
+
+    int udp_socket = w_socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+
+    w_bind(udp_socket, (struct sockaddr *) &sock_address, sizeof(sock_address));
+
+    return udp_socket;
+}
