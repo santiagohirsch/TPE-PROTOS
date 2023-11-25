@@ -212,16 +212,14 @@ struct server * init_server(int argc, char * argv[]) {
             }
         } else if(strcmp(argv[0],"-u") == 0) {
             if (!dir_set) {
-                fprintf(stderr, "root dir not set\n");
-                close_server();
-                return NULL;
+                log_msg(LOG_FATAL, "user option requires root dir to be set");
             }
             argv++;
             argc--;
             handle_user_option(argc,argv);
         } else if(strcmp(argv[0], "-a") == 0) {
             if (!dir_set) {
-                log_msg(LOG_FATAL, "root dir not set");
+                log_msg(LOG_FATAL, "admin option requires root dir to be set");
             }
 
             if (admin_set) {
