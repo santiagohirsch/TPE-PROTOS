@@ -79,6 +79,10 @@ int pass_cmd(session_ptr session, char *arg, int arg_len, char *response, bool *
 
     strncat(dir, username, username_len);
 
+    strcat(dir, "/");
+
+    strcat(dir, "cur");
+
     DIR *dir_ptr = opendir(dir);
 
     if (dir_ptr == NULL) {
@@ -125,7 +129,7 @@ static void get_file_stats(DIR * dir, const char * path, int * file_count, int *
                         log_msg(LOG_ERROR, "get_file_size error");
                         return;
                     } else {
-                        *bytes += get_file_size(path, entry->d_name);
+                        *bytes += size;
                     }
                 }
         }
@@ -149,6 +153,10 @@ int stat_cmd(session_ptr session, char * arg, int len, char * response) {
     strcpy(mail_dir, get_root_dir());
     strcat(mail_dir, "/");
     strncat(mail_dir, username, username_len);
+    strcat(mail_dir, "/");
+    strcat(mail_dir, "cur/");
+
+    int * user_mails = get_dir_mails(session);
 
     DIR * dir = get_dir(session);
     if(!dir) {
@@ -158,23 +166,9 @@ int stat_cmd(session_ptr session, char * arg, int len, char * response) {
 
     int file_count = 0;
     int bytes = 0;
+    rewinddir(dir);
 
-    struct dirent * entry;
-
-    int * user_mails = get_dir_mails(session);
-
-    int i = 0;
-    while((entry = readdir(dir)) != NULL) {
-        if(entry->d_type == DT_REG) {
-            if(!user_mails[i++]) {
-                file_count++;
-                bytes += get_file_size(mail_dir, entry->d_name);
-                log_msg(LOG_INFO, "entry: %s. size: %d", entry->d_name, bytes);
-            }
-        }
-    }
-
-    get_file_stats(dir, mail_dir, &file_count, &bytes,user_mails);
+    get_file_stats(dir, mail_dir, &file_count, &bytes, user_mails);
 
     sprintf(response, "%d %d", file_count, bytes);
 
@@ -245,6 +239,7 @@ int list_cmd(session_ptr session, char * arg, int len, char * response, int byte
     strcat(path, "/");
     strncat(path, username, username_len);
     strcat(path, "/");
+    strcat(path, "cur/");
     int path_len = strlen(path);
     int * user_mails = get_dir_mails(session);
     struct stat st;
@@ -397,6 +392,7 @@ int retr_cmd(session_ptr session, char * arg, int len, char * response, int byte
     strcat(path, "/");
     strncat(path, username, username_len);
     strcat(path, "/");
+    strcat(path, "cur/");
 
     entry = read_files(dir, msg_num);
 
