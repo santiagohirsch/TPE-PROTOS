@@ -22,7 +22,7 @@ struct option {
 
 static void help_handler()
 {
-    printf("Usage: ./user -a <user>:<pass> COMMAND [ARGUMENT]...\n");
+    printf("Usage: ./pop3d-user -a <user>:<pass> COMMAND [ARGUMENT]...\n");
     printf("Commands:\n");
     printf("\tcurrent\n");
     printf("\thistory\n");

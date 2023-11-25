@@ -55,12 +55,10 @@ void udp_read(struct selector_key *key) {
     if (udp_response->value[0] != '\0') {
         aux_bytes += snprintf(aux + aux_bytes, MAX_BYTES_TO_READ - aux_bytes, "value: %s\r\n.\r\n", udp_response->value);
     }
-    log_msg(LOG_INFO, "UDP response sent:\n");
-    log_msg(LOG_INFO, "request_id: %d\n", udp_response->rqst_id);
-    log_msg(LOG_INFO, "status_code: %d\n", udp_response->code);
-    if (udp_response->value[0] != '\0') {
-        log_msg(LOG_INFO, "value: %s\n", udp_response->value);
+    else {
+        aux_bytes += snprintf(aux + aux_bytes, MAX_BYTES_TO_READ - aux_bytes, ".\r\n");
     }
+    log_msg(LOG_INFO, "UDP response sent: %s", aux);
     sendto(key->fd, aux, aux_bytes, 0, (struct sockaddr *) &client_addr, client_addr_len);
     
     free(udp_request);

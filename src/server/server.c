@@ -32,7 +32,7 @@ int main(int argc, char *argv[]){
 
     // close stdin, stdout
     close(0);
-    close(1);
+    close(1); // open for logs in server console
 
     // handle signals
     signal(SIGINT, handle_signal);
@@ -95,8 +95,8 @@ int main(int argc, char *argv[]){
 
     // main loop
     while(!received_signal){
+        log_msg(LOG_INFO, "selector select active: starting iteration");
         selector_select(fd_selector);
-        log_msg(LOG_INFO, "selector select active: iteration complete");
     }
 
     // cleanup
