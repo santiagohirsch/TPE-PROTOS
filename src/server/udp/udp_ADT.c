@@ -74,5 +74,5 @@ void close_udp() {
 }
 
 void close_udp_fd_handler(struct selector_key * key) {
-    close_udp();
+    //close_udp();
 }
