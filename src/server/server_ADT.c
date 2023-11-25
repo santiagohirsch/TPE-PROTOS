@@ -9,7 +9,8 @@
 #include "./utils/logger.h"
 #include "./udp/udp_ADT.h"
 #define BLOCK 5
-#define PORT 1110
+#define IPV4_PORT 1110
+#define IPV6_PORT 9090
 #define MAX_USERS 500
 
 typedef struct user_node {
@@ -94,7 +95,7 @@ static void register_admin(int argc, char *argv[]) {
     set_admin(username, password);
 }
 
-static int register_port(int argc, char *argv[]) {
+static int register_ipv4_port(int argc, char *argv[]) {
     if (argc == 0) {
         log_msg(LOG_FATAL, "-p: Usage: -p <port>");
     }
@@ -105,6 +106,21 @@ static int register_port(int argc, char *argv[]) {
     int port_int = atoi(port);
     if (port_int < 0 || port_int > 65535) {
         log_msg(LOG_FATAL, "-p: invalid port");
+    }
+    return port_int;
+}
+
+static int register_ipv6_port(int argc, char *argv[]) {
+    if (argc == 0) {
+        log_msg(LOG_FATAL, "-P: Usage: -P <port>");
+    }
+    char * port = argv[0];
+    if (strlen(port) > 5) {
+        log_msg(LOG_FATAL, "-P: port too long");
+    }
+    int port_int = atoi(port);
+    if (port_int < 0 || port_int > 65535) {
+        log_msg(LOG_FATAL, "-P: invalid port");
     }
     return port_int;
 }
@@ -153,7 +169,8 @@ struct server * init_server(int argc, char * argv[]) {
     if(server != NULL) {
         return server;
     }
-    int port = PORT;
+    int ipv4_port = IPV4_PORT;
+    int ipv6_port = IPV6_PORT;
     if(argc <= 1) {
         log_msg(LOG_FATAL, "usage: ./main -d <root_dir> -u <user:pass> [-u <user:pass>]...\n");
         return NULL;
@@ -170,7 +187,8 @@ struct server * init_server(int argc, char * argv[]) {
 
     bool dir_set = false;
     bool admin_set = false;
-    bool port_set = false;
+    bool ipv4_port_set = false;
+    bool ipv6_port_set = false;
     argv++;
     argc--;
     while(argc > 0) {
@@ -194,16 +212,14 @@ struct server * init_server(int argc, char * argv[]) {
             }
         } else if(strcmp(argv[0],"-u") == 0) {
             if (!dir_set) {
-                fprintf(stderr, "root dir not set\n");
-                close_server();
-                return NULL;
+                log_msg(LOG_FATAL, "user option requires root dir to be set");
             }
             argv++;
             argc--;
             handle_user_option(argc,argv);
         } else if(strcmp(argv[0], "-a") == 0) {
             if (!dir_set) {
-                log_msg(LOG_FATAL, "root dir not set");
+                log_msg(LOG_FATAL, "admin option requires root dir to be set");
             }
 
             if (admin_set) {
@@ -215,13 +231,21 @@ struct server * init_server(int argc, char * argv[]) {
             register_admin(argc, argv);
             
         } else if(strcmp(argv[0], "-p") == 0) {
-            if (port_set) {
+            if (ipv4_port_set) {
                 log_msg(LOG_FATAL, "port already set");
             }
             argv++;
             argc--;
-            port = register_port(argc, argv);
-            port_set = true;
+            ipv4_port = register_ipv4_port(argc, argv);
+            ipv4_port_set = true;
+        }  else if(strcmp(argv[0], "-P") == 0) {
+            if (ipv6_port_set) {
+                log_msg(LOG_FATAL, "port already set");
+            }
+            argv++;
+            argc--;
+            ipv6_port = register_ipv6_port(argc, argv);
+            ipv6_port_set = true;
         }
         else {
             fprintf(stderr, "invalid command\n");
@@ -231,8 +255,8 @@ struct server * init_server(int argc, char * argv[]) {
         argc--;
     }
 
-    int ipv4_socket = setup_ipv4_server(port);
-    int ipv6_socket = setup_ipv6_server(port);
+    int ipv4_socket = setup_ipv4_server(ipv4_port);
+    int ipv6_socket = setup_ipv6_server(ipv6_port);
 
     if (ipv4_socket < 0 || ipv6_socket < 0) {
         log_msg(LOG_FATAL, "setup server error");

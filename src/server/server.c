@@ -40,7 +40,11 @@ int main(int argc, char *argv[]){
 
     // setup server
     init_udp();
-    /*server_t server = */init_server(argc, argv);
+    server_t server = init_server(argc, argv);
+    if (server == NULL) {
+        log_msg(LOG_FATAL, "server initialization failed");
+        exit(1);
+    }
     int server_ipv4_sock = get_server_ipv4_socket();
     log_msg(LOG_INFO, "server ipv4 socket: %d", server_ipv4_sock);
 
