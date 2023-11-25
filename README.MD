@@ -25,17 +25,19 @@ Una vez compilado genera dos ejecutables `./pop3d` y `./pop3d-user` que correspo
 ### Servidor POP3
 Se debe correr:
 
-```./pop3d -d <mail> -p <port> -a <admin>:<password>  -u <user>:<username> ``` 
+```./pop3d -d <mail> -p <port-ipv4> -P <port-ipv6> -a <admin>:<password>  -u <user>:<username> ``` 
 
-IMPORTANT: El -d <mail> deve ir obligatoriamente antes del admin (-a <admin>:<password>) y de los usuario (-u <user>:<password>).
+IMPORTANT:    El -d <mail> DEBE ir antes del admin (-a <admin>:<password>) y de los usuarios (-u <user>:<password>).
+              El resto de los comandos no tiene orden.
 
 NOTE: Se pueden agregar multiples usuarios colocando distintas -u para cada usuario
-NOTE 2: De no ponerse -p <port> el servidor correra automaticamente en el 1110
+NOTE 3: De no especificarse <port-ipv4> con el flag -p el servidor correrá automáticamente en el puerto 1110
+NOTE 3: De no especificarse <port-ipv6> con el flag -P el servidor correrá automáticamente en el puerto 9090
 
 ### Aplicacion de usuario
 
 ```./pop3d-user -a <admin>:<adminpassword> <COMMAND> [args]```
 
-NOTE: los argumentos pueden ser opcionales.
+NOTE: los argumentos dependiendo el COMMAND pueden ser opcionales.
 
 Para ver que comandos utilizar se puede correr el comando con el flag `-h` para que de despliegue la lista de comandos.
