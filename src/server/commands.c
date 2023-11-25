@@ -367,27 +367,26 @@ int quit_cmd (session_ptr session) {
     return 0;
 }
 
-int retr_cmd(session_ptr session, char *arg, int arg_len,
-                             char *response_buff, int buffsize) {
+int retr_cmd(session_ptr session, char * arg, int len, char * response, int bytes) {
+    log_msg(LOG_INFO, "retr command");
 
-    action_type current = pop_action_state(session);
+    action_type action = pop_action(session);
+    log_msg(LOG_INFO, "action: %d", action);
 
-    // arg_len has number + '\0'
-    if (arg_len <= 1) {
-        log(1, "RETR received no argument");
-        return sprintf(response_buff, "hola");
+    if (len <= 1)
+    {
+        return sprintf(response, "-ERR Invalid command\r\n");
     }
+    
+    long msg_num = strtol(arg, NULL, 10);
+    
+    DIR * dir = get_dir(session);
+    rewinddir(dir);
 
-    int mail_index = strtol(arg, NULL, 10);
+    struct dirent * entry;
 
-    DIR *client_dir = get_client_dir_pt(session);
-    rewinddir(client_dir);
-
-    struct dirent *client_dirent;
-
-    // Build user mail pathF
-    char mail_path[1024] = {0};
-    char username[NAME_MAX] = {0};
+    char username[USERNAME_MAX_LEN] = {0};
+    char path[MAX_MAIL_PATH_LEN] = {0};
     int username_len = get_username(session, username);
     strcpy(path, get_root_dir());
     strcat(path, "/");
@@ -395,81 +394,75 @@ int retr_cmd(session_ptr session, char *arg, int arg_len,
     strcat(path, "/");
     strcat(path, "cur/");
 
-    int i = 1;
+    entry = read_files(dir, msg_num);
 
-    while (i <= mail_index && ((client_dirent = readdir(client_dir)) != NULL)) {
-        if (client_dirent->d_type == DT_REG)
-            i++;
+    if (msg_num < 1 || msg_num > get_dir_mails_count(session) || entry == NULL) {
+        log_msg(LOG_INFO, "There's no message %ld.", msg_num);
+        return sprintf(response, "-ERR There's no message %ld.\r\n", msg_num);
+    } else if (is_marked_to_delete(session, msg_num)) {
+        log_msg(LOG_INFO, "Message is deleted.");
+        return sprintf(response, "-ERR Message is deleted.\r\n");
     }
 
-    if (client_dirent == NULL) {
-        //log(1, "Could not find message");
-        return sprintf(response_buff, "ERR_RETR");
+    struct retr_state * mail_retr_state = get_retr_state(session);
+    int resp_idx = 0;
+
+    if (action == PROCESS) {
+        strcat(path, entry->d_name);
+        mail_retr_state->mail_fd = open(path, O_NONBLOCK);
+        if (mail_retr_state->mail_fd < 0) {
+            log_msg(LOG_ERROR, "open error");
+            return -1;
+        }
+        resp_idx = strlen("+OK\r\n");
+        strncpy(response, "+OK\r\n", resp_idx);
+        bytes -= resp_idx;
     }
 
-    struct retr_state *mail_retr = get_session_state(session);
-    int buffer_response_index = 0;
-
-    if (current == PROCESS) {
-        strcat(mail_path, client_dirent->d_name);
-        mail_retr->mail_fd = open(mail_path, O_NONBLOCK);
-        buffer_response_index = strlen("OK_RETR");
-        strncpy(response_buff, "OK_RETR", buffer_response_index);
-        buffsize -= buffer_response_index;
-    }
-
-    char mail_data[BUFFER_SIZE];
+    char mail[BUFFER_SIZE];
     int read_bytes = 0;
-    byte_stuffing_state current_state = 3;
+    byte_stuffing_state current_state = EMPTY;
 
-    while (buffer_response_index < buffsize) {
-
-        read_bytes = read(mail_retr->mail_fd, mail_data, BUFFER_SIZE - 1);
-        mail_data[read_bytes] = '\0';
-        if (read_bytes == 0)
-            break;
-
-        int data_index = 0;
-
-        for (; data_index < read_bytes && (buffer_response_index < buffsize);
-             ++data_index) {
-            switch (current_state) {
-                case CR:
-                    if (mail_data[data_index] == '\n')
-                        current_state = LF;
-                    else
-                        current_state = 3;
-                    break;
-                case LF:
-                    if (mail_data[data_index] == '.') {
-                        response_buff[buffer_response_index++] = '.';
-                    }
-                    current_state = 3;
-                    break;
-                default:
-                    if (mail_data[data_index] == '\r')
-                        current_state = CR;
+    while (resp_idx < bytes && (read_bytes = read(mail_retr_state->mail_fd, mail, BUFFER_SIZE-1)) > 0) {
+        int data_idx = 0;
+        mail[read_bytes] = '\0';
+        log_msg(LOG_INFO, "RETR, read_bytes: %d", read_bytes);
+        for (; data_idx < read_bytes && resp_idx < bytes; data_idx++) {
+            if (mail[data_idx] == '\n') {
+                response[resp_idx++] = '\r';
+                current_state = LF;
+            } else if (current_state == LF) {
+                if (mail[data_idx] == '.') {
+                    response[resp_idx++] = '.';
+                }
+                current_state = EMPTY;
+            } else {
+                if (mail[data_idx] == '\r') {
+                    current_state = CR;
+                }
             }
-            response_buff[buffer_response_index++] = mail_data[data_index];
+            response[resp_idx++] = mail[data_idx];
         }
 
-        if (buffer_response_index == buffsize) {
-            lseek(mail_retr->mail_fd, data_index - read_bytes, SEEK_CUR);
+        if (resp_idx == bytes) {
+            lseek(mail_retr_state->mail_fd, data_idx - read_bytes, SEEK_CUR);
         }
     }
-
+    log_msg(LOG_INFO, "RETR, read_bytes: %d", read_bytes);
+    
     if (read_bytes == 0) {
-        int len = strlen("\r\n.\r\n");
-        if (buffer_response_index < buffsize - len) {
-            strncpy(response_buff + buffer_response_index,
-                    "\r\n.\r\n", len);
-            buffer_response_index += len;
+        int multi_retr_len = strlen("\r\n.\r\n");
+        if (resp_idx + multi_retr_len < bytes) {
+            strncpy(response + resp_idx, "\r\n.\r\n", multi_retr_len);
+            resp_idx += multi_retr_len;
         }
-        close(mail_retr->mail_fd);
+        close(mail_retr_state->mail_fd);
+        log_msg(LOG_INFO, "RETR, mail closed");
     } else {
         push_action(session, PROCESSING);
+        log_msg(LOG_INFO, "RETR, action pushed: %d", PROCESSING);
     }
 
-    mail_retr->stuffed_byte = current_state;
-    return buffer_response_index;
+    mail_retr_state->stuffed_byte = current_state;
+    return resp_idx;
 }
