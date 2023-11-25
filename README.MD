@@ -9,9 +9,9 @@ Integrantes
 
 # Documentacion
 
-Puede hallarse la documentacion en el directorio "documents" en la raiz del proyecto. En la misma se encuentra el diagrama de flujo y el informe sobre el proyecto.
+Puede hallarse la documentacion en la raiz del proyecto. En la misma se encuentra el diagrama de flujo y el informe sobre el proyecto.
 
-#Requerimientos previos
+# Requerimientos previos
        - Make
        - GCC
 
@@ -20,12 +20,15 @@ Puede hallarse la documentacion en el directorio "documents" en la raiz del proy
 
 Una vez compilado genera dos ejecutables `./pop3d` y `./pop3d-user` que corresponden al servidor y a la aplicación del usuario respectivamente.
 
-###Ejecucion
+### Ejecucion
 
-###Servidor POP3
+### Servidor POP3
 Se debe correr:
 
 ```./pop3d -d <mail> -p <port> -a <admin>:<password>  -u <user>:<username> ``` 
+
+IMPORTANT: El -d <mail> deve ir obligatoriamente antes del admin (-a <admin>:<password>) y de los usuario (-u <user>:<password>).
+
 NOTE: Se pueden agregar multiples usuarios colocando distintas -u para cada usuario
 NOTE 2: De no ponerse -p <port> el servidor correra automaticamente en el 1110
 
