@@ -373,6 +373,7 @@ int add_user(session_ptr session) {
         current->next = NULL;
         server->users = current;
         server->user_session_count++;
+        server->total_user_session_count++;
         return 0;
     }
     while(current->next != NULL) {
