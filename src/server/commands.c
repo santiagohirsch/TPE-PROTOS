@@ -400,7 +400,7 @@ int retr_cmd(session_ptr session, char * arg, int len, char * response, int byte
         log_msg(LOG_INFO, "There's no message %ld.", msg_num);
         return sprintf(response, "-ERR There's no message %ld.\r\n", msg_num);
     } else if (is_marked_to_delete(session, msg_num)) {
-        log_msg(LOG_INFO, "Message is deleted.");
+        log_msg(LOG_INFO,"devolvi 3");
         return sprintf(response, "-ERR Message is deleted.\r\n");
     }
 
@@ -423,13 +423,12 @@ int retr_cmd(session_ptr session, char * arg, int len, char * response, int byte
     int read_bytes = 0;
     byte_stuffing_state current_state = EMPTY;
 
-    while (resp_idx < bytes && (read_bytes = read(mail_retr_state->mail_fd, mail, BUFFER_SIZE-1)) > 0) {
+    while (resp_idx < bytes && (read_bytes = read(mail_retr_state->mail_fd, mail, BUFFER_SIZE-1)) > 0)  {
         int data_idx = 0;
         mail[read_bytes] = '\0';
-        log_msg(LOG_INFO, "RETR, read_bytes: %d", read_bytes);
         for (; data_idx < read_bytes && resp_idx < bytes; data_idx++) {
             if (mail[data_idx] == '\n') {
-                response[resp_idx++] = '\r';
+                //response[resp_idx++] = '\r';
                 current_state = LF;
             } else if (current_state == LF) {
                 if (mail[data_idx] == '.') {
@@ -464,5 +463,7 @@ int retr_cmd(session_ptr session, char * arg, int len, char * response, int byte
     }
 
     mail_retr_state->stuffed_byte = current_state;
+    printf("RESP IDX: %d", resp_idx);
+    log_msg(LOG_INFO,"\n");
     return resp_idx;
 }
